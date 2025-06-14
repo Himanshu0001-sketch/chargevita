@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useContext } from "react";
-import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
 import { CartContext } from "../context/CartContext"; // Assuming you have CartContext set up
+import axios from "axios";
 
 const ProductDetailPage = () => {
   const { id } = useParams(); // Get product ID from the URL
@@ -12,11 +12,14 @@ const ProductDetailPage = () => {
   // State for the toast notification
   const [toast, setToast] = useState(null);
 
+  // Get the base API URL from the environment variable
+  const apiUrl = import.meta.env.VITE_API_URL;
+
   // Fetch product details based on the ID from URL
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const { data } = await axios.get(`http://localhost:5000/api/products/${id}`);
+        const { data } = await axios.get(`${apiUrl}/api/products/${id}`); // Use apiUrl from .env
         setProduct(data); // Set the product data in state
       } catch (err) {
         console.error("Error fetching product details:", err);
@@ -24,7 +27,7 @@ const ProductDetailPage = () => {
     };
 
     fetchProduct();
-  }, [id]);
+  }, [id, apiUrl]);
 
   if (!product) return <p className="text-center text-lg font-semibold">Loading...</p>;
 
@@ -54,15 +57,14 @@ const ProductDetailPage = () => {
         
         {/* Product Image */}
         <div className="flex justify-center ">
-           
           <img
-            src={`http://localhost:5000${product.image}`} // Display product image
+            src={`${apiUrl}${product.image}`}  // Dynamically use the base API URL from .env
             alt={product.name}
             className="w-full h-96 object-contain rounded-lg shadow-lg"
           />
         </div>
-        <p className="md:hidden  text-2xl font-bold text-green-600">₹ {product.price}</p>
- <h1 className="md:hidden text-xl font-bold text-gray-800">{product.name}</h1>
+        <p className="md:hidden text-2xl font-bold text-green-600">₹ {product.price}</p>
+        <h1 className="md:hidden text-xl font-bold text-gray-800">{product.name}</h1>
  
         {/* Product Details */}
         <div className="flex flex-col justify-center">
@@ -71,23 +73,22 @@ const ProductDetailPage = () => {
 
           <p className="mt-2 text-lg text-gray-600">{product.description}</p>
           <ul className="list-disc list-inside text-sm mt-2 text-gray-600">
-  {product.features.map((point, idx) => (
-    <li key={idx}>{point}</li>
-  ))}
-</ul>
+            {product.features.map((point, idx) => (
+              <li key={idx}>{point}</li>
+            ))}
+          </ul>
          
-
           {/* Add to Cart and Buy Now Buttons */}
           <div className="mt-6 flex space-x-4">
             <button
               onClick={handleAddToCart}
-              className="bg-yellow-500 text-white py-2 px-6   transition duration-300"
+              className="bg-yellow-500 text-white py-2 px-6 transition duration-300"
             >
               Add to Cart
             </button>
             <button
               onClick={handleBuyNow}
-              className="bg-orange-500 text-white py-2 px-6   transition duration-300"
+              className="bg-orange-500 text-white py-2 px-6 transition duration-300"
             >
               Buy Now
             </button>
@@ -95,15 +96,7 @@ const ProductDetailPage = () => {
         </div>
       </div>
 
-      {/* Product Specifications or Additional Info */}
-    {/*   <div className="mt-8 p-6 bg-gray-50 rounded-lg shadow-sm">
-        <h2 className="text-2xl font-semibold text-gray-800">Product Details</h2>
-        <ul className="list-disc pl-5 mt-4 text-gray-700">
-          <li>Brand: Product Brand</li>
-          <li>Category: Product Category</li>
-          <li>Shipping: Free shipping on orders above ₹500</li>
-        </ul>
-      </div> */}
+     
     </div>
   );
 };

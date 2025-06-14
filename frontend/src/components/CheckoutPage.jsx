@@ -16,6 +16,9 @@ const CheckoutPage = () => {
 
   const { cartItems, totalAmount } = state || { cartItems: [], totalAmount: 0 };
 
+  // Get the API URL from environment variables
+  const apiUrl = import.meta.env.VITE_API_URL;
+
   useEffect(() => {
     if (!cartItems || cartItems.length === 0) {
       navigate("/");
@@ -51,8 +54,9 @@ const CheckoutPage = () => {
         address,
       };
 
+      // Updated API URL to use the environment variable
       const { data } = await axios.post(
-        "http://localhost:5000/api/payment/create",
+        `${apiUrl}/api/payment/create`,
         payload
       );
 
@@ -102,7 +106,7 @@ const CheckoutPage = () => {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-9 mt-5">
       <div className="w-full max-w-lg bg-white p-6 rounded-xl shadow-lg">
         <h1 className="text-2xl font-bold text-center mb-6 text-orange-500">
-         Proceed to Checkout
+          Proceed to Checkout
         </h1>
 
         <div className="space-y-4">

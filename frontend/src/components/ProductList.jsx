@@ -5,13 +5,21 @@ import ProductCard from "./ProductCard";
 const ProductList = () => {
   const [products, setProducts] = useState([]);
 
+  // Access the API URL from the environment variable
+  const apiUrl = import.meta.env.VITE_API_URL;
+
   useEffect(() => {
     const fetchProducts = async () => {
-      const { data } = await axios.get("http://localhost:5000/api/products");
-      setProducts(data);
+      try {
+        // Fetch products using the API URL from .env
+        const { data } = await axios.get(`${apiUrl}/api/products`);
+        setProducts(data);
+      } catch (err) {
+        console.error("Error fetching products:", err);
+      }
     };
     fetchProducts();
-  }, []);
+  }, [apiUrl]);
 
   return (
     <>

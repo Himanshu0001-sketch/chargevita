@@ -6,6 +6,8 @@ const CartPage = () => {
   const { cartItems, removeFromCart, clearCart, updateCartItemQuantity } = useContext(CartContext);
   const navigate = useNavigate();
 
+  // Get the API URL from environment variables
+  const apiUrl = import.meta.env.VITE_API_URL;
   const totalAmount = cartItems.reduce(
     (acc, item) => acc + item.price * item.quantity,
     0
@@ -53,7 +55,7 @@ const CartPage = () => {
                 >
                   <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full">
                     <img
-                      src={`http://localhost:5000${item.image}`}
+                      src={`${apiUrl}${item.image}`} // Using the environment variable
                       alt={item.name}
                       className="w-24 h-24 object-cover rounded-lg"
                     />
@@ -75,7 +77,7 @@ const CartPage = () => {
                           +
                         </button>
                       </div>
-                      
+
                       <p className="font-bold text-gray-800 mt-1">Total: ₹ {item.price * item.quantity}</p>
                     </div>
                   </div>
