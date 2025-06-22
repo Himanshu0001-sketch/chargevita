@@ -1,21 +1,27 @@
 const Order = require("../models/Order");
 const Product = require("../models/Product");
 const nodemailer = require("nodemailer");
-/* const { createShiprocketOrder } = require("../utils/shiprocket"); */
+const { createShiprocketOrder } = require("../utils/shiprocket");
 
 exports.createOrder = async (req, res) => {
   try {
+    console.log("Received order data:", req.body);
+
     const { products, totalAmount, address } = req.body;
 
-    // 1. Create and save the order
+    if (!products || !Array.isArray(products) || !totalAmount || !address || !address.name) {
+      return res.status(400).json({ message: "Missing or invalid order data" });
+    }
+
     const order = new Order({ products, totalAmount, address });
     await order.save();
     await order.populate("products.product");
 
-    // 2. Optional: Create shipment (Shiprocket)
-     /* await createShiprocketOrder(order);
- */
-    // 3. Send email notification to admin
+    // Email setup
+    if (!process.env.ADMIN_EMAIL || !process.env.ADMIN_EMAIL_PASS) {
+      throw new Error("Missing ADMIN_EMAIL or ADMIN_EMAIL_PASS");
+    }
+
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -24,9 +30,9 @@ exports.createOrder = async (req, res) => {
       },
     });
 
-    const productDetails = order.products.map((p) => {
-      return `<li>${p.quantity} × ${p.product?.name || "Unknown"}</li>`;
-    }).join("");
+    const productDetails = order.products.map((p) =>
+      `<li>${p.quantity} × ${p.product?.name || "Unknown"}</li>`
+    ).join("");
 
     const mailOptions = {
       from: '"Shop Notification" <no-reply@yourstore.com>',
@@ -44,7 +50,11 @@ exports.createOrder = async (req, res) => {
       `
     };
 
-    await transporter.sendMail(mailOptions);
+    try {
+      await transporter.sendMail(mailOptions);
+    } catch (emailErr) {
+      console.error("❌ Failed to send email:", emailErr);
+    }
 
     res.status(201).json(order);
   } catch (err) {
