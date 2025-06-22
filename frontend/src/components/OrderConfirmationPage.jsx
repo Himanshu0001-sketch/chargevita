@@ -8,7 +8,7 @@ const OrderConfirmationPage = () => {
   const navigate = useNavigate();
   const [orderDetails, setOrderDetails] = useState(null);
 
-  const { cartItems, totalAmount, orderId, paymentStatus, address } = state || {};
+  const {  totalAmount, orderId, paymentStatus, address } = state || {};
 
   useEffect(() => {
     if (!orderId) {
@@ -40,23 +40,21 @@ const OrderConfirmationPage = () => {
           Thank you for your purchase! Your order has been successfully placed.
         </p>
 
-        <div className="bg-gray-100 p-4 rounded-lg mb-8">
-          <h2 className="text-xl font-medium text-gray-800 mb-2">Order Summary</h2>
-          <div className="flex justify-between mb-2">
-            <span className="text-gray-600">Order ID:</span>
-            <span className="font-semibold text-gray-800">{orderDetails.orderId}</span>
-          </div>
-          <div className="flex justify-between mb-2">
-            <span className="text-gray-600">Payment Status:</span>
-            <span className="font-semibold text-gray-800">
-              {paymentStatus ? "Paid" : "Failed"}
-            </span>
-          </div>
-          <div className="flex justify-between mb-2">
-            <span className="text-gray-600">Total Amount:</span>
-            <span className="font-semibold text-gray-800">₹ {totalAmount}</span>
-          </div>
-        </div>
+       <div className="bg-gray-100 p-4 rounded-lg mb-8">
+  <h2 className="text-xl font-medium text-gray-800 mb-2">Order Summary</h2>
+  <div className="flex justify-between mb-2">
+    <span className="text-gray-600">Order ID:</span>
+    <span className="font-semibold text-gray-800">{orderDetails.orderId}</span>
+  </div>
+  <div className="flex justify-between mb-2">
+    <span className="text-gray-600">Payment Method:</span>
+    <span className="font-semibold text-gray-800">Cash on Delivery</span>
+  </div>
+  <div className="flex justify-between mb-2">
+    <span className="text-gray-600">Total Amount:</span>
+    <span className="font-semibold text-gray-800">₹ {totalAmount}</span>
+  </div>
+</div>
 
         {/* Shipping Address */}
         <div className="bg-gray-100 p-4 rounded-lg mb-8">

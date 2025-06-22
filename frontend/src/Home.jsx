@@ -22,18 +22,18 @@ export const Home = () => {
    </div>
    <AboutSection/>
    <WhyChooseChargeVita/>
-   <div className='w-full container flex  mx-auto px-2 md:gap-5'>
+   <div className='w-full container flex  mx-auto px-2 gap-2 md:gap-5'>
     <div className='md:w-1/2'>
-    <img src={imagethree} alt="" className='md:w-full md:h-auto h-45 '/>
+    <img src={imagethree} alt="" className='md:w-full md:h-auto h-40 '/>
     </div>
     <div className='md:w-1/2'>
-    <img src={imagefour} alt="" className='md:w-full md:h-auto h-45 '/>
+    <img src={imagefour} alt="" className='md:w-full md:h-auto h-40 '/>
     </div>
     
    </div>
    <TestimonialSection/>
    <div className='md:hidden'>
-    <img src={imagetwo} alt="" className='md:w-full md:h-auto h-30 '/>
+    <img src={imagetwo} alt="" className='md:w-full md:h-auto h-35 '/>
    </div>
 
     <div className='hidden md:block'>

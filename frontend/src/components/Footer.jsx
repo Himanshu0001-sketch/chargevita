@@ -73,12 +73,7 @@ const Footer = () => {
           <span>India</span>
         </div>
         <p>Copyright © 2025 | All Rights Reserved</p>
-       {/*  <div className="flex items-center justify-center space-x-4">
-          <img src={picone} alt="Visa" className="h-8 w-auto" />
-          <img src={pictwo} alt="Mastercard" className="h-8 w-auto" />
-          <img src={picthree} alt="PayPal" className="h-8 w-auto" />
-          <img src={picfour} alt="Google Pay" className="h-8 w-auto" />
-        </div> */}
+       
       </div>
     </footer>
   );

@@ -1,16 +1,25 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-const { createOrder, getAllOrders,updateOrderStatus, deleteOrder } = require("../controllers/orderController");
-const { isAdmin } = require("../middleware/authMiddleware");
+const {
+  createOrder,
+  updateOrderStatus,
+  deleteOrder,
+} = require('../controllers/orderController');
+const { isAdmin } = require('../middleware/authMiddleware');
+const Order = require("../models/Order");
 
-// Public: create order
-//   POST /api/orders
-router.post("/", createOrder);
+router.post('/', createOrder);
 
-// Admin only: view all orders (expects { username, password } in body)
-//   POST /api/orders/admin
-router.post("/admin", isAdmin, getAllOrders);
-router.post("/update-status", updateOrderStatus);
-router.delete("/:id", deleteOrder);
+router.get("/admin", isAdmin, async (req, res) => {
+  try {
+    const orders = await Order.find().populate("products.product");
+    res.json(orders);
+  } catch (err) {
+    res.status(500).json({ message: "Failed to fetch orders" });
+  }
+});
+
+router.post('/update-status', isAdmin, updateOrderStatus);
+router.delete('/:id', isAdmin, deleteOrder);
 
 module.exports = router;

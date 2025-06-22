@@ -5,25 +5,39 @@ import axios from "axios";
 const CheckoutPage = () => {
   const { state } = useLocation();
   const navigate = useNavigate();
+
+  const apiUrl = import.meta.env.VITE_API_URL;
+
+  const { cartItems: initialCartItems, totalAmount: initialTotal } = state || {
+    cartItems: [],
+    totalAmount: 0,
+  };
+
+  const [cartItems, setCartItems] = useState(initialCartItems);
+  const [totalAmount, setTotalAmount] = useState(initialTotal);
   const [loading, setLoading] = useState(false);
+
   const [address, setAddress] = useState({
     name: "",
+    phone: "",
+    email: "",
     street: "",
     city: "",
     state: "",
     postalCode: "",
   });
 
-  const { cartItems, totalAmount } = state || { cartItems: [], totalAmount: 0 };
-
-  // Get the API URL from environment variables
-  const apiUrl = import.meta.env.VITE_API_URL;
-
   useEffect(() => {
-    if (!cartItems || cartItems.length === 0) {
+    if (!initialCartItems || initialCartItems.length === 0) {
       navigate("/");
     }
-  }, [cartItems, navigate]);
+  }, [initialCartItems, navigate]);
+
+  // Recalculate total when quantities change
+  useEffect(() => {
+    const total = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
+    setTotalAmount(total);
+  }, [cartItems]);
 
   const handleAddressChange = (e) => {
     const { name, value } = e.target;
@@ -33,13 +47,25 @@ const CheckoutPage = () => {
     }));
   };
 
+  const updateQuantity = (productId, delta) => {
+    setCartItems((prevItems) =>
+      prevItems.map((item) =>
+        item._id === productId
+          ? { ...item, quantity: Math.max(1, item.quantity + delta) }
+          : item
+      )
+    );
+  };
+
   const handlePlaceOrder = async () => {
     if (loading) return;
-
     setLoading(true);
 
-    if (Object.values(address).some((field) => field.trim() === "")) {
-      alert("Please fill in all address fields.");
+    const requiredFields = ["name", "phone", "street", "city", "state", "postalCode"];
+    const hasEmptyFields = requiredFields.some((key) => address[key].trim() === "");
+
+    if (hasEmptyFields) {
+      alert("Please fill in all required fields.");
       setLoading(false);
       return;
     }
@@ -52,122 +78,125 @@ const CheckoutPage = () => {
         })),
         totalAmount,
         address,
+        paymentStatus: "Pending",
       };
 
-      // Updated API URL to use the environment variable
-      const { data } = await axios.post(
-        `${apiUrl}/api/payment/create`,
-        payload
-      );
+      const { data } = await axios.post(`${apiUrl}/api/orders`, payload);
 
-      if (!data.paymentUrl) {
-        alert("Error: Payment URL not received. Please try again.");
-        return;
-      }
-
-      const options = {
-        key: "rzp_test_5VP8aQsRZd71M5",
-        amount: totalAmount * 100,
-        currency: "INR",
-        order_id: data.razorpayOrderId,
-        handler: function (response) {
-          const orderDetails = {
-            orderId: data.orderId,
-            paymentStatus: true,
-            cartItems,
-            totalAmount,
-            address,
-          };
-          navigate("/order-confirmation", { state: orderDetails });
-        },
-        prefill: {
-          name: address.name,
-          email: "john.doe@example.com",
-          contact: "+919876543210",
-        },
-        theme: {
-          color: "#F37254",
-        },
+      const orderDetails = {
+        orderId: data.orderId || "COD" + Date.now(),
+        paymentStatus: false,
+        cartItems,
+        totalAmount,
+        address,
       };
 
-      const rzp1 = new window.Razorpay(options);
-      rzp1.open();
+      navigate("/order-confirmation", { state: orderDetails });
     } catch (err) {
-      console.error("Error initiating payment:", err);
-      alert("Failed to initiate payment. Please try again.");
+      console.error("Error placing order:", err);
+      alert("Failed to place order. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  const isFormValid = Object.values(address).every((field) => field.trim() !== "");
+  const isFormValid = Object.entries(address).every(([key, val]) => {
+    if (key === "email") return true;
+    return val.trim() !== "";
+  });
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-9 mt-5">
-      <div className="w-full max-w-lg bg-white p-6 rounded-xl shadow-lg">
-        <h1 className="text-2xl font-bold text-center mb-6 text-orange-500">
-          Proceed to Checkout
-        </h1>
+    <div className="min-h-screen bg-gray-100 py-8 px-4 md:px-10">
+      <div className="max-w-7xl mx-auto">
+        <h1 className="text-3xl font-bold text-gray-800 mb-6">Checkout</h1>
 
-        <div className="space-y-4">
-          <input
-            type="text"
-            name="name"
-            placeholder="Full Name"
-            value={address.name}
-            onChange={handleAddressChange}
-            className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-          />
-          <input
-            type="text"
-            name="street"
-            placeholder="Street Address"
-            value={address.street}
-            onChange={handleAddressChange}
-            className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-          />
-          <input
-            type="text"
-            name="city"
-            placeholder="City"
-            value={address.city}
-            onChange={handleAddressChange}
-            className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-          />
-          <input
-            type="text"
-            name="state"
-            placeholder="State"
-            value={address.state}
-            onChange={handleAddressChange}
-            className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-          />
-          <input
-            type="text"
-            name="postalCode"
-            placeholder="Postal Code"
-            value={address.postalCode}
-            onChange={handleAddressChange}
-            className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-          />
+        <div className="flex flex-col-reverse md:flex-row gap-6">
+          {/* Shipping Form */}
+          <div className="w-full md:w-3/5 bg-white p-6 rounded-xl shadow-sm">
+            <h2 className="text-xl font-semibold mb-4 text-gray-700">Shipping Information</h2>
+            <div className="space-y-4">
+              {[
+                { name: "name", label: "Full Name" },
+                { name: "phone", label: "Phone Number" },
+                { name: "email", label: "Email Address (optional)" },
+                { name: "street", label: "Street Address" },
+                { name: "city", label: "City" },
+                { name: "state", label: "State" },
+                { name: "postalCode", label: "Postal Code" },
+              ].map((field) => (
+                <input
+                  key={field.name}
+                  type="text"
+                  name={field.name}
+                  placeholder={field.label}
+                  value={address[field.name]}
+                  onChange={handleAddressChange}
+                  className="w-full border border-gray-300 px-4 py-3 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              ))}
+            </div>
+            <button
+              onClick={handlePlaceOrder}
+              disabled={!isFormValid || loading}
+              className={`mt-6 w-full bg-blue-600 text-white font-medium text-lg py-3 rounded-md transition hover:bg-blue-700 ${
+                !isFormValid || loading ? "opacity-50 cursor-not-allowed" : ""
+              }`}
+            >
+              {loading ? "Processing..." : "Place Order (Cash on Delivery)"}
+            </button>
+          </div>
+
+          {/* Order Summary */}
+          <div className="w-full md:w-2/5 bg-white p-6 rounded-xl shadow-sm">
+            <h2 className="text-xl font-semibold mb-4 text-gray-700">Order Summary</h2>
+            <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
+              {cartItems.map((item, index) => (
+                <div
+                  key={index}
+                  className="flex items-start justify-between gap-4 border-b pb-4"
+                >
+                  <img
+                    src={`${apiUrl}${item.image}`}
+                    alt={item.name}
+                    className="w-20 h-20 object-cover rounded"
+                  />
+                  <div className="flex-1">
+                    <p className="font-medium text-gray-800">{item.name}</p>
+                    <div className="flex items-center space-x-2 mt-1">
+                      <button
+                        onClick={() => updateQuantity(item._id, -1)}
+                        className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
+                      >
+                        -
+                      </button>
+                      <span className="text-sm font-medium">{item.quantity}</span>
+                      <button
+                        onClick={() => updateQuantity(item._id, 1)}
+                        className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
+                      >
+                        +
+                      </button>
+                    </div>
+                    <p className="text-sm text-gray-500">Price: ₹{item.price}</p>
+                  </div>
+                  <p className="font-semibold text-gray-700">
+                    ₹{item.price * item.quantity}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            <div className="pt-4 mt-4 space-y-2 text-right">
+              <p className="text-gray-700 text-sm">
+                Items: <span className="font-medium">{cartItems.length}</span>
+              </p>
+              <p className="text-gray-800 text-xl font-bold">
+                Total: ₹{totalAmount}
+              </p>
+            </div>
+             
+          </div>
         </div>
-
-        <div className="my-6 text-center text-gray-600">
-          <p>
-            You have <strong>{cartItems.length}</strong> item(s) totaling{" "}
-            <strong>₹ {totalAmount}</strong>.
-          </p>
-        </div>
-
-        <button
-          onClick={handlePlaceOrder}
-          disabled={!isFormValid || loading}
-          className={`w-full bg-green-600 text-white text-lg font-semibold py-3 rounded-md transition duration-300 hover:bg-green-700 ${
-            !isFormValid || loading ? "opacity-50 cursor-not-allowed" : ""
-          }`}
-        >
-          {loading ? "Processing..." : `Pay ₹ ${totalAmount} Now`}
-        </button>
       </div>
     </div>
   );

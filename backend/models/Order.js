@@ -13,14 +13,12 @@ const orderSchema = new mongoose.Schema(
       },
     ],
     totalAmount: { type: Number, required: true },
-    paymentStatus: {
-      type: String,
-      enum: ["Pending", "Paid", "Shipped", "Delivered", "Cancelled", "Yet to Dispatch"],  // Include all statuses here
-      default: "Pending",
-    },
+    
     createdAt: { type: Date, default: Date.now },
     address: {
       name: { type: String, required: true },
+      phone: { type: String, required: true }, // ✅ Add this line
+      email: { type: String }, // optional but recommended
       street: { type: String, required: true },
       city: { type: String, required: true },
       state: { type: String, required: true },

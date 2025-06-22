@@ -1,34 +1,32 @@
 import React from 'react';
+import { IoPersonCircle } from 'react-icons/io5'; // 👈 Import user icon
 
 const testimonials = [
   {
-    name: "Aarav Malhotra",
-    role: "Entrepreneur, Delhi",
+    name: "Sneha Kapoor",
+    role: "Health Enthusiast, Bangalore",
     message:
-      "ChargeVita has completely changed the way I manage shipments. Super fast delivery and reliable customer support!",
-    image: "https://randomuser.me/api/portraits/men/75.jpg",
+      "ChargeVita supplements have become part of my daily routine. I feel more energetic and focused since I started using their multivitamins.",
   },
   {
-    name: "Priya Sharma",
-    role: "Small Business Owner, Mumbai",
+    name: "Raj Mehta",
+    role: "Fitness Trainer, Mumbai",
     message:
-      "As a startup, I was struggling with logistics until I found ChargeVita. Their bulk shipping solution is a game-changer.",
-    image: "https://randomuser.me/api/portraits/women/65.jpg",
+      "I always recommend ChargeVita’s gummies to my clients. They're tasty, effective, and easy to incorporate into a busy lifestyle.",
   },
   {
-    name: "Rohit Verma",
-    role: "Freelancer, Bangalore",
+    name: "Aisha Rahman",
+    role: "Working Professional, Delhi",
     message:
-      "I love how easy it is to track packages with ChargeVita. The interface is intuitive and support is always helpful.",
-    image: "https://randomuser.me/api/portraits/men/64.jpg",
+      "Balancing work and health is tough, but ChargeVita’s probiotic tablets and sleep gummies have truly made a difference in my wellbeing.",
   },
 ];
 
 const TestimonialSection = () => {
   return (
-    <section className=" py-12 px-6">
+    <section className="py-12 px-6">
       <div className="max-w-7xl mx-auto text-center">
-        <h2 className="text-3xl md:text-4xl font-bold text-gray-600 mb-6">What Our Customers Say</h2>
+        <h2 className="text-2xl md:text-4xl font-bold text-gray-600 mb-6">What Our Customers Say</h2>
         <p className="text-gray-600 mb-12 max-w-2xl mx-auto">
           Trusted by thousands of happy clients across India. Here's what a few of them have to say about their experience with ChargeVita.
         </p>
@@ -39,11 +37,9 @@ const TestimonialSection = () => {
               className="bg-white shadow-lg rounded-2xl p-6 border border-purple-100 hover:shadow-xl transition"
             >
               <div className="flex items-center mb-4">
-                <img
-                  src={t.image}
-                  alt={t.name}
-                  className="h-12 w-12 rounded-full object-cover mr-4"
-                />
+                <div className="text-gray-500 text-5xl mr-4">
+                  <IoPersonCircle /> {/* 👈 User icon here */}
+                </div>
                 <div className="text-left">
                   <h4 className="text-md font-semibold text-gray-800">{t.name}</h4>
                   <p className="text-sm text-gray-500">{t.role}</p>
