@@ -21,8 +21,8 @@ app.use(cors({
     }
   },
   credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // ✅ Add this line
 }));
-
 app.use(express.json());
 connectDB();
 app.use('/uploads', express.static('uploads'));
