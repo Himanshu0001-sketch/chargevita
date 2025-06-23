@@ -10,7 +10,19 @@ const shiprocketRoutes = require("./routes/shiprocketRoutes");
 
 const app = express();
 
-app.use(cors({ origin: "http://localhost:5173", credentials: true }));
+const allowedOrigins = ["http://localhost:5173", "https://chargevita.in"];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true,
+}));
+
 app.use(express.json());
 connectDB();
 app.use('/uploads', express.static('uploads'));
