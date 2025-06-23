@@ -12,7 +12,7 @@ const ManageProducts = () => {
     features: "",
   });
 
-const apiUrl = import.meta.env.VITE_API_URL;
+  const apiUrl = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     sessionStorage.removeItem("fromDashboard");
@@ -22,7 +22,6 @@ const apiUrl = import.meta.env.VITE_API_URL;
   const fetchProducts = async () => {
     try {
       const res = await axios.get(`${apiUrl}/api/products`);
-
       setProducts(res.data);
     } catch (error) {
       console.error("Failed to load products", error);
@@ -32,30 +31,38 @@ const apiUrl = import.meta.env.VITE_API_URL;
   const handleAddProduct = async (e) => {
     e.preventDefault();
 
-    const formData = new FormData();
-    formData.append("name", newProduct.name);
-    formData.append("price", newProduct.price);
-    formData.append("description", newProduct.description);
-    formData.append("features", newProduct.features);
-    if (newProduct.image) formData.append("image", newProduct.image);
-
     try {
       if (editingId) {
-  const updatePayload = {
-    ...newProduct,
-    features: newProduct.features.split(',').map(f => f.trim()), // ✅ convert to array
-  };
+        const updatePayload = {
+          ...newProduct,
+          features: newProduct.features.split(',').map(f => f.trim()),
+        };
 
-  await axios.put(`http://localhost:5000/api/products/${editingId}`, updatePayload, {
-    headers: {
-      username: "admin",
-      password: "adminpassword",
-    },
-  });
+        await axios.put(`${apiUrl}/api/products/${editingId}`, updatePayload, {
+          headers: {
+            username: "admin",
+            password: "adminpassword",
+          },
+        });
 
-  alert("Product updated successfully!");
-}
+        alert("Product updated successfully!");
+      } else {
+        const formData = new FormData();
+        formData.append("name", newProduct.name);
+        formData.append("price", newProduct.price);
+        formData.append("description", newProduct.description);
+        formData.append("features", newProduct.features);
+        if (newProduct.image) formData.append("image", newProduct.image);
 
+        await axios.post(`${apiUrl}/api/products`, formData, {
+          headers: {
+            username: "admin",
+            password: "adminpassword",
+          },
+        });
+
+        alert("Product added successfully!");
+      }
 
       setNewProduct({
         name: "",
@@ -76,7 +83,7 @@ const apiUrl = import.meta.env.VITE_API_URL;
     if (!window.confirm("Are you sure you want to delete this product?")) return;
 
     try {
-      await axios.delete(`http://localhost:5000/api/products/${id}`, {
+      await axios.delete(`${apiUrl}/api/products/${id}`, {
         headers: {
           username: "admin",
           password: "adminpassword",
@@ -183,7 +190,7 @@ const apiUrl = import.meta.env.VITE_API_URL;
               <div className="flex items-center gap-4">
                 {product.image && (
                   <img
-                    src={`http://localhost:5000${product.image}`}
+                    src={`${apiUrl}${product.image}`}
                     alt={product.name}
                     className="w-20 h-20 object-cover rounded"
                   />
