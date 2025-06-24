@@ -178,6 +178,7 @@ const seedProducts = async (req, res) => {
 ]
 
     },
+    
      {
       name: "Healthy Lungs",
       image: "/uploads/products/productseven.jpg",  // Assuming image path for seeded products

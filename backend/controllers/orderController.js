@@ -1,23 +1,23 @@
 const Order = require("../models/Order");
 const Product = require("../models/Product");
 const nodemailer = require("nodemailer");
-const { createShiprocketOrder } = require("../utils/shiprocket");
 
 exports.createOrder = async (req, res) => {
   try {
     console.log("Received order data:", req.body);
-
     const { products, totalAmount, address } = req.body;
 
     if (!products || !Array.isArray(products) || !totalAmount || !address || !address.name) {
       return res.status(400).json({ message: "Missing or invalid order data" });
     }
 
-    const order = new Order({ products, totalAmount, address });
+    // associate to logged-in user
+    const userId = req.user._id;
+
+    const order = new Order({ user: userId, products, totalAmount, address });
     await order.save();
     await order.populate("products.product");
 
-    // Email setup
     if (!process.env.ADMIN_EMAIL || !process.env.ADMIN_EMAIL_PASS) {
       throw new Error("Missing ADMIN_EMAIL or ADMIN_EMAIL_PASS");
     }
@@ -40,6 +40,7 @@ exports.createOrder = async (req, res) => {
       subject: `🛒 New Order from ${address.name}`,
       html: `
         <h2>New Order Received</h2>
+        <p><strong>User ID:</strong> ${userId}</p>
         <p><strong>Name:</strong> ${address.name}</p>
         <p><strong>Phone:</strong> ${address.phone}</p>
         ${address.email ? `<p><strong>Email:</strong> ${address.email}</p>` : ""}
@@ -60,6 +61,17 @@ exports.createOrder = async (req, res) => {
   } catch (err) {
     console.error("❌ Error placing order:", err);
     res.status(500).json({ message: "Failed to place order", error: err.message });
+  }
+};
+
+exports.getMyOrders = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const orders = await Order.find({ user: userId }).populate("products.product");
+    res.json(orders);
+  } catch (err) {
+    console.error("❌ Error fetching user orders:", err);
+    res.status(500).json({ message: "Failed to fetch orders" });
   }
 };
 

@@ -1,19 +1,18 @@
+// src/components/Admin/ManageOrders.jsx
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
-// Axios instance with admin auth headers
-const apiUrl = import.meta.env.VITE_API_URL;
-const axiosAdmin = axios.create({
-  baseURL: `${apiUrl}/api`,
-
-  headers: {
-    username: "admin",
-    password: "adminpassword",
-  },
-});
-
 const ManageOrders = () => {
   const [orders, setOrders] = useState([]);
+  const apiUrl = import.meta.env.VITE_API_URL;
+
+  // Axios instance with admin token auth
+  const axiosAdmin = axios.create({
+    baseURL: `${apiUrl}/api/orders`,
+    headers: {
+      authorization: import.meta.env.VITE_ADMIN_TOKEN,
+    },
+  });
 
   useEffect(() => {
     sessionStorage.removeItem("fromDashboard");
@@ -22,7 +21,8 @@ const ManageOrders = () => {
 
   const fetchOrders = async () => {
     try {
-      const res = await axiosAdmin.get("/orders/admin");
+      // GET /api/orders/admin
+      const res = await axiosAdmin.get("/admin");
       setOrders(res.data);
     } catch (error) {
       console.error("Error fetching orders", error);
@@ -30,9 +30,10 @@ const ManageOrders = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure to delete this order?")) return;
+    if (!window.confirm("Are you sure you want to delete this order?")) return;
     try {
-      await axiosAdmin.delete(`/orders/${id}`);
+      // DELETE /api/orders/:id
+      await axiosAdmin.delete(`/${id}`);
       fetchOrders();
     } catch (err) {
       console.error("Failed to delete order", err);
@@ -60,8 +61,7 @@ const ManageOrders = () => {
                   </h3>
 
                   <p className="text-gray-500 text-sm mb-2">
-                    Placed on:{" "}
-                    {new Date(order.createdAt).toLocaleString("en-IN", {
+                    Placed on: {new Date(order.createdAt).toLocaleString("en-IN", {
                       dateStyle: "medium",
                       timeStyle: "short",
                     })}
@@ -72,8 +72,7 @@ const ManageOrders = () => {
                   </p>
 
                   <p className="text-gray-700">
-                    <span className="font-medium">Status:</span>{" "}
-                    {order.paymentStatus}
+                    <span className="font-medium">Status:</span> {order.paymentStatus}
                   </p>
 
                   {/* Full Address */}
@@ -83,9 +82,7 @@ const ManageOrders = () => {
                       <strong>Name:</strong> {order.address.name}<br />
                       <strong>Phone:</strong> {order.address.phone}<br />
                       {order.address.email && (
-                        <>
-                          <strong>Email:</strong> {order.address.email}<br />
-                        </>
+                        <><strong>Email:</strong> {order.address.email}<br /></>
                       )}
                       <strong>Street:</strong> {order.address.street}<br />
                       <strong>City:</strong> {order.address.city}<br />
@@ -101,8 +98,7 @@ const ManageOrders = () => {
                       {order.products.map((item, idx) => (
                         <li key={idx} className="flex items-center gap-4">
                           <img
-                           src={`${apiUrl}${item.product?.image || "/placeholder.jpg"}`}
-
+                            src={`${apiUrl}${item.product?.image || "/placeholder.jpg"}`}
                             alt={item.product?.name || "Product"}
                             className="w-16 h-16 object-cover rounded shadow"
                           />

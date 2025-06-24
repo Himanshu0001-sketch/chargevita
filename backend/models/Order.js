@@ -2,6 +2,11 @@ const mongoose = require("mongoose");
 
 const orderSchema = new mongoose.Schema(
   {
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,            // ◀ newly added association
+    },
     products: [
       {
         product: {
@@ -13,12 +18,11 @@ const orderSchema = new mongoose.Schema(
       },
     ],
     totalAmount: { type: Number, required: true },
-    
     createdAt: { type: Date, default: Date.now },
     address: {
       name: { type: String, required: true },
-      phone: { type: String, required: true }, // ✅ Add this line
-      email: { type: String }, // optional but recommended
+      phone: { type: String, required: true },
+      email: { type: String },
       street: { type: String, required: true },
       city: { type: String, required: true },
       state: { type: String, required: true },

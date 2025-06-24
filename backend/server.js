@@ -1,16 +1,22 @@
+// server.js
+
 const express = require("express");
 const cors = require("cors");
 const connectDB = require("./config/db");
 require("dotenv").config();
 
-const productRoutes = require("./routes/productRoutes");
-const orderRoutes = require("./routes/orderRoutes");
-const adminRoutes = require("./routes/adminRoutes");
+const productRoutes    = require("./routes/productRoutes");
+const orderRoutes      = require("./routes/orderRoutes");
+const adminRoutes      = require("./routes/adminRoutes");
+const userRoutes       = require("./routes/userRoutes");       // ◀ newly added
 const shiprocketRoutes = require("./routes/shiprocketRoutes");
 
 const app = express();
 
-const allowedOrigins = ["http://localhost:5173", "https://chargevita.in"];
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://chargevita.in"
+];
 
 app.use(cors({
   origin: function (origin, callback) {
@@ -21,16 +27,19 @@ app.use(cors({
     }
   },
   credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // ✅ Add this line
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
 }));
+
 app.use(express.json());
 connectDB();
 app.use('/uploads', express.static('uploads'));
 
-app.use('/api/admin', adminRoutes);
-app.use("/api/products", productRoutes);
-app.use("/api/orders", orderRoutes);
-app.use("/api/shiprocket", shiprocketRoutes);
+// Public & user routes
+app.use('/api/admin',   adminRoutes);
+app.use('/api/users',   userRoutes);        // ◀ mounted before orders
+app.use('/api/products', productRoutes);
+app.use('/api/orders',   orderRoutes);
+app.use('/api/shiprocket', shiprocketRoutes);
 
 app.get("/", (req, res) => {
   res.send("E-commerce Backend Running with Shiprocket");

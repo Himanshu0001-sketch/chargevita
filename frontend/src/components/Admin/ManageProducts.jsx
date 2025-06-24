@@ -1,3 +1,4 @@
+// src/components/Admin/ManageProducts.jsx
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
@@ -11,98 +12,110 @@ const ManageProducts = () => {
     description: "",
     features: "",
   });
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const apiUrl = import.meta.env.VITE_API_URL;
+
+  // Axios instance with admin token auth, paralleling ManageOrders
+  const axiosAdmin = axios.create({
+    baseURL: `${apiUrl}/api/products`,
+    headers: {
+      authorization: import.meta.env.VITE_ADMIN_TOKEN,
+    },
+  });
+
+  // Fetch all products
+  const fetchProducts = async () => {
+    setIsLoading(true);
+    try {
+      const res = await axiosAdmin.get("/");
+      setProducts(res.data);
+    } catch (err) {
+      setError("Failed to load products");
+      console.error("Failed to load products", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
     sessionStorage.removeItem("fromDashboard");
     fetchProducts();
   }, []);
 
-  const fetchProducts = async () => {
-    try {
-      const res = await axios.get(`${apiUrl}/api/products`);
-      setProducts(res.data);
-    } catch (error) {
-      console.error("Failed to load products", error);
-    }
-  };
-
+  // Add or update product
   const handleAddProduct = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
+    setError(null);
 
     try {
+      const formData = new FormData();
+      formData.append("name", newProduct.name);
+      formData.append("price", newProduct.price);
+      formData.append("description", newProduct.description);
+      newProduct.features
+        .split(",")
+        .map((f) => f.trim())
+        .filter(Boolean)
+        .forEach((f) => formData.append("features", f));
+      if (newProduct.image) formData.append("image", newProduct.image);
+
       if (editingId) {
+        // Update existing product via JSON
         const updatePayload = {
-          ...newProduct,
-          features: newProduct.features.split(',').map(f => f.trim()),
+          name: newProduct.name,
+          price: newProduct.price,
+          description: newProduct.description,
+          features: newProduct.features.split(",").map(f => f.trim()).filter(Boolean),
         };
-
-        await axios.put(`${apiUrl}/api/products/${editingId}`, updatePayload, {
-          headers: {
-            username: "admin",
-            password: "adminpassword",
-          },
-        });
-
-        alert("Product updated successfully!");
+        await axiosAdmin.put(
+          `/${editingId}`,
+          updatePayload,
+          { headers: { authorization: import.meta.env.VITE_ADMIN_TOKEN, 'Content-Type': 'application/json' } }
+        );
       } else {
-        const formData = new FormData();
-        formData.append("name", newProduct.name);
-        formData.append("price", newProduct.price);
-        formData.append("description", newProduct.description);
-        formData.append("features", newProduct.features);
-        if (newProduct.image) formData.append("image", newProduct.image);
-
-        await axios.post(`${apiUrl}/api/products`, formData, {
-          headers: {
-            username: "admin",
-            password: "adminpassword",
-          },
-        });
-
-        alert("Product added successfully!");
+        // POST /api/products/
+        await axiosAdmin.post(`/`, formData);
       }
 
-      setNewProduct({
-        name: "",
-        image: null,
-        price: "",
-        description: "",
-        features: "",
-      });
+      setNewProduct({ name: "", image: null, price: "", description: "", features: "" });
       setEditingId(null);
       fetchProducts();
     } catch (err) {
-      console.error(err);
-      alert("Failed to save product");
+      setError(err.response?.data?.message || "Failed to save product");
+      console.error("Save error:", err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  // Delete product
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this product?")) return;
-
+    setIsLoading(true);
+    setError(null);
     try {
-      await axios.delete(`${apiUrl}/api/products/${id}`, {
-        headers: {
-          username: "admin",
-          password: "adminpassword",
-        },
-      });
+      // DELETE /api/products/:id
+      await axiosAdmin.delete(`/${id}`);
       fetchProducts();
-    } catch (error) {
-      console.error("Failed to delete product", error);
-      alert("Failed to delete product");
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to delete product");
+      console.error("Delete error:", err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  // Prepare edit
   const handleEdit = (product) => {
     setEditingId(product._id);
     setNewProduct({
       name: product.name,
       price: product.price,
       description: product.description,
-      features: product.features?.join(", "),
+      features: product.features?.join(", ") || "",
       image: null,
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -112,6 +125,12 @@ const ManageProducts = () => {
     <div className="p-6 max-w-5xl mx-auto">
       <h2 className="text-3xl font-bold mb-6 text-center">Manage Products</h2>
 
+      {error && (
+        <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6">
+          <p>{error}</p>
+        </div>
+      )}
+
       <form
         onSubmit={handleAddProduct}
         className="bg-gray-100 p-6 rounded-lg shadow mb-8"
@@ -120,104 +139,136 @@ const ManageProducts = () => {
         <h3 className="text-xl font-semibold mb-4">
           {editingId ? "Edit Product" : "Add New Product"}
         </h3>
-        <div className="grid grid-cols-2 gap-4">
-          <input
-            type="text"
-            placeholder="Name"
-            value={newProduct.name}
-            onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
-            className="p-2 border rounded"
-            required
-          />
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => setNewProduct({ ...newProduct, image: e.target.files[0] })}
-            className="p-2 border rounded"
-            required={!editingId}
-          />
-          <input
-            type="number"
-            placeholder="Price"
-            value={newProduct.price}
-            onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
-            className="p-2 border rounded"
-            required
-          />
-          <input
-            type="text"
-            placeholder="Features (comma separated)"
-            value={newProduct.features}
-            onChange={(e) => setNewProduct({ ...newProduct, features: e.target.value })}
-            className="p-2 border rounded"
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+            <input
+              type="text"
+              value={newProduct.name}
+              onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
+              className="w-full p-2 border rounded"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              {editingId ? "New Image (optional)" : "Image"}
+            </label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => setNewProduct({ ...newProduct, image: e.target.files[0] })}
+              className="w-full p-2 border rounded"
+              required={!editingId}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Price</label>
+            <input
+              type="number"
+              value={newProduct.price}
+              onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
+              className="w-full p-2 border rounded"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Features</label>
+            <input
+              type="text"
+              value={newProduct.features}
+              onChange={(e) => setNewProduct({ ...newProduct, features: e.target.value })}
+              className="w-full p-2 border rounded"
+              required
+            />
+          </div>
+        </div>
+        <div className="mt-4">
+          <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+          <textarea
+            value={newProduct.description}
+            onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
+            className="w-full p-2 border rounded"
+            rows="4"
             required
           />
         </div>
-        <textarea
-          placeholder="Description"
-          value={newProduct.description}
-          onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
-          className="w-full mt-4 p-2 border rounded"
-        />
-
-        {newProduct.image && (
-          <div className="mt-4">
-            <p className="text-sm text-gray-700 mb-1">Image Preview:</p>
-            <img
-              src={URL.createObjectURL(newProduct.image)}
-              alt="Preview"
-              className="w-40 h-35 object-cover rounded shadow"
-            />
-          </div>
-        )}
-
-        <button
-          type="submit"
-          className="mt-4 bg-blue-600 text-white px-4 py-2 rounded"
-        >
-          {editingId ? "Update Product" : "Add Product"}
-        </button>
+        <div className="mt-4 flex items-center">
+          <button
+            type="submit"
+            disabled={isLoading}
+            className={`px-4 py-2 rounded ${
+              isLoading ? "bg-gray-400" : "bg-blue-600 hover:bg-blue-700 text-white"
+            }`}
+          >
+            {isLoading
+              ? "Processing..."
+              : editingId
+              ? "Update Product"
+              : "Add Product"}
+          </button>
+          {editingId && (
+            <button
+              type="button"
+              onClick={() => {
+                setEditingId(null);
+                setNewProduct({ name: "", image: null, price: "", description: "", features: "" });
+              }}
+              className="ml-4 px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded"
+            >
+              Cancel
+            </button>
+          )}
+        </div>
       </form>
 
       <div>
         <h3 className="text-2xl font-semibold mb-4">Product List</h3>
-        <div className="grid gap-6">
-          {products.map((product) => (
-            <div
-              key={product._id}
-              className="border p-4 rounded shadow flex items-center justify-between"
-            >
-              <div className="flex items-center gap-4">
-                {product.image && (
-                  <img
-                    src={`${apiUrl}${product.image}`}
-                    alt={product.name}
-                    className="w-20 h-20 object-cover rounded"
-                  />
-                )}
-                <div>
-                  <h4 className="text-lg font-bold">{product.name}</h4>
-                  <p className="text-gray-700">₹{product.price}</p>
-                  <p className="text-sm text-gray-600">{product.description}</p>
+        {isLoading ? (
+          <p>Loading products...</p>
+        ) : products.length === 0 ? (
+          <p>No products found.</p>
+        ) : (
+          <div className="grid gap-6">
+            {products.map((product) => (
+              <div
+                key={product._id}
+                className="border p-4 rounded shadow flex flex-col sm:flex-row items-center justify-between"
+              >
+                <div className="flex items-center gap-4 mb-4 sm:mb-0">
+                  {product.image && (
+                    <img
+                      src={`${apiUrl}${product.image}`}
+                      alt={product.name}
+                      className="w-20 h-20 object-cover rounded"
+                    />
+                  )}
+                  <div>
+                    <h4 className="text-lg font-bold">{product.name}</h4>
+                    <p className="text-gray-700">₹{product.price}</p>
+                    <p className="text-sm text-gray-600 line-clamp-2">{product.description}</p>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleEdit(product)}
+                    disabled={isLoading}
+                    className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(product._id)}
+                    disabled={isLoading}
+                    className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
+                  >
+                    Delete
+                  </button>
                 </div>
               </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => handleEdit(product)}
-                  className="bg-yellow-500 text-white px-3 py-1 rounded"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleDelete(product._id)}
-                  className="bg-red-500 text-white px-3 py-1 rounded"
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
