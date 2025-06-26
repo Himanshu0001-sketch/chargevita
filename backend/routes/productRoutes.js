@@ -5,19 +5,17 @@ const { upload } = require('../middleware/UploadMiddleware');
 const {
   getProducts,
   getProductById,
-  seedProducts,
   addProduct,
   updateProduct,
   deleteProduct,
 } = require('../controllers/productController');
 
 // Route order matters
-router.get('/seed', seedProducts); // must come before /:id
-router.get('/', getProducts);
-router.get('/:id', getProductById);
+router.get('/', getProducts);  // Get all products
+router.get('/:id', getProductById);  // Get product by ID
 
-router.post('/', upload.single('image'), isAdmin, addProduct);
-router.put('/:id', isAdmin, updateProduct);
-router.delete('/:id', isAdmin, deleteProduct);
+router.post('/', upload.single('image'), isAdmin, addProduct);  // Add a new product (admin only)
+router.put('/:id', isAdmin, updateProduct);  // Update a product by ID (admin only)
+router.delete('/:id', isAdmin, deleteProduct);  // Delete a product by ID (admin only)
 
 module.exports = router;
