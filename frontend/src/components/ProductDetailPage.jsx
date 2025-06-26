@@ -1,28 +1,23 @@
 import React, { useEffect, useState, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { CartContext } from "../context/CartContext"; // Assuming you have CartContext set up
+import { CartContext } from "../context/CartContext";
 import axios from "axios";
 
 const ProductDetailPage = () => {
-  const { id } = useParams(); // Get product ID from the URL
+  const { id } = useParams();
   const [product, setProduct] = useState(null);
-  const { addToCart } = useContext(CartContext); // Accessing addToCart function from CartContext
-  const navigate = useNavigate(); // To navigate the user to the checkout page
-
-  // State for the toast notification
+  const { addToCart } = useContext(CartContext);
+  const navigate = useNavigate();
   const [toast, setToast] = useState(null);
-
-  // Get the base API URL from the environment variable
+  const [selectedImage, setSelectedImage] = useState(null);
   const apiUrl = import.meta.env.VITE_API_URL;
 
-  // Fetch product details based on the ID from URL
   useEffect(() => {
     const fetchProduct = async () => {
-      console.log("Trying to fetch:", `${apiUrl}/api/products/${id}`);
-
       try {
-        const { data } = await axios.get(`${apiUrl}/api/products/${id}`); // Use apiUrl from .env
-        setProduct(data); // Set the product data in state
+        const { data } = await axios.get(`${apiUrl}/api/products/${id}`);
+        setProduct(data);
+        setSelectedImage(data.image); // Default to main image
       } catch (err) {
         console.error("Error fetching product details:", err);
       }
@@ -31,62 +26,82 @@ const ProductDetailPage = () => {
     fetchProduct();
   }, [id, apiUrl]);
 
-  if (!product) return <p className="text-center text-lg font-semibold">Loading...</p>;
-
-  // Handle Add to Cart functionality
   const handleAddToCart = () => {
-    addToCart(product); // Add the current product to the cart
-    setToast({ message: "Added to Cart!", type: "success" }); // Display success message
-    setTimeout(() => setToast(null), 3000); // Hide the toast after 3 seconds
+    addToCart(product);
+    setToast({ message: "Added to Cart!", type: "success" });
+    setTimeout(() => setToast(null), 3000);
   };
 
-  // Handle Buy Now functionality
   const handleBuyNow = () => {
-    addToCart(product); // Add product to cart
+    addToCart(product);
     navigate("/checkout", {
-  state: {
-    cartItems: [{ ...product, quantity: 1 }],
-    totalAmount: product.price,
-  },
-});
- // Navigate to checkout page with the selected product
+      state: {
+        cartItems: [{ ...product, quantity: 1 }],
+        totalAmount: product.price,
+      },
+    });
   };
+
+  if (!product) {
+    return <p className="text-center text-lg font-semibold">Loading...</p>;
+  }
 
   return (
     <div className="container mx-auto py-15 mt-9 px-5">
       {/* Toast Notification */}
       {toast && (
-        <div className="fixed top-9 right-6 text-green-500 p-7 ">
+        <div className="fixed top-9 right-6 text-green-500 p-7">
           {toast.message}
         </div>
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-         <h1 className="md:hidden text-xl font-bold text-gray-800">{product.name}</h1>
-        {/* Product Image */}
-        <div className="flex justify-center ">
+        <h1 className="md:hidden text-xl font-bold text-gray-800">{product.name}</h1>
+
+        {/* Image + Thumbnails */}
+        <div className="flex flex-col items-center">
           <img
-            src={`${apiUrl}${product.image}`}  // Dynamically use the base API URL from .env
+            src={`${apiUrl}${selectedImage}`}
             alt={product.name}
             className="w-full h-96 object-contain rounded-lg shadow-lg"
           />
+
+          {/* Thumbnail carousel */}
+          <div className="flex mt-4 gap-2 overflow-x-auto max-w-full">
+            <img
+              src={`${apiUrl}${product.image}`}
+              alt="Main"
+              className="w-20 h-20 object-cover border-2 rounded cursor-pointer"
+              onClick={() => setSelectedImage(product.image)}
+            />
+            {product.gallery?.map((img, idx) => (
+              <img
+                key={idx}
+                src={`${apiUrl}${img}`}
+                alt={`Thumbnail ${idx + 1}`}
+                className="w-20 h-20 object-cover border-2 rounded cursor-pointer"
+                onClick={() => setSelectedImage(img)}
+              />
+            ))}
+          </div>
         </div>
-        <p className="md:hidden text-2xl font-semibold text-red-600">₹ {product.price}</p>
-       
- 
-        {/* Product Details */}
+
+        {/* Product Info */}
         <div className="flex flex-col justify-center">
           <h1 className="hidden md:block text-3xl font-bold text-gray-800">{product.name}</h1>
-          <p className="hidden md:block mt-4 text-xl font-semibold text-red-500">₹ {product.price}</p>
-           <h3 className="text-xl font-semibold text-gray-700">Product Description :-</h3>
+          <p className="hidden md:block mt-4 text-xl font-semibold text-red-500">
+            ₹ {product.price}
+          </p>
+          <p className="md:hidden text-2xl font-semibold text-red-600">₹ {product.price}</p>
+
+          <h3 className="text-xl font-semibold text-gray-700 mt-4">Product Description :-</h3>
           <p className="mt-2 text-lg text-gray-600">{product.description}</p>
           <ul className="list-disc list-inside text-sm mt-2 text-gray-600">
             {product.features.map((point, idx) => (
               <li key={idx}>{point}</li>
             ))}
           </ul>
-         
-          {/* Add to Cart and Buy Now Buttons */}
+
           <div className="mt-6 flex space-x-4">
             <button
               onClick={handleAddToCart}
@@ -103,8 +118,6 @@ const ProductDetailPage = () => {
           </div>
         </div>
       </div>
-
-     
     </div>
   );
 };

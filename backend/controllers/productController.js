@@ -1,5 +1,5 @@
 const Product = require("../models/Product");
-const { upload } = require('../middleware/UploadMiddleware'); 
+const { upload } = require('../middleware/UploadMiddleware');
 
 // Get all products
 const getProducts = async (req, res) => {
@@ -25,24 +25,32 @@ const getProductById = async (req, res) => {
 // Add a new product
 const addProduct = async (req, res) => {
   try {
+    console.log("📦 Incoming Product Data:", req.body);
+    console.log("🖼️ Uploaded Files:", req.files);
+
     const { name, price, description, features } = req.body;
 
-    if (!req.file) {
-      return res.status(400).json({ message: "Image upload failed" });
+    if (!req.files || !req.files.image || req.files.image.length === 0) {
+      return res.status(400).json({ message: "Main image is required" });
     }
+
+    const mainImage = `/uploads/${req.files.image[0].filename}`;
+    const galleryImages = (req.files.images || []).map(file => `/uploads/${file.filename}`);
 
     const product = new Product({
       name,
       price,
       description,
-      features: features.split(','),
-      image: `/uploads/${req.file.filename}`,
+      features: features.split(',').map(f => f.trim()),
+      image: mainImage,
+      gallery: galleryImages,
     });
 
     await product.save();
     res.status(201).json({ message: 'Product added successfully!', product });
   } catch (error) {
-    res.status(500).json({ message: 'Error adding product', error });
+    console.error("❌ Error adding product:", error);
+    res.status(500).json({ message: 'Error adding product', error: error.message });
   }
 };
 
@@ -53,12 +61,13 @@ const updateProduct = async (req, res) => {
 
   try {
     const product = await Product.findById(id);
-
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
     }
 
-    // Update fields safely
+    console.log("📝 Updating Product ID:", id);
+    console.log("🆕 Data:", req.body);
+
     product.name = name || product.name;
     product.image = image || product.image;
     product.price = price || product.price;
@@ -73,6 +82,7 @@ const updateProduct = async (req, res) => {
     const updatedProduct = await product.save();
     res.json(updatedProduct);
   } catch (err) {
+    console.error("❌ Failed to update product:", err);
     res.status(500).json({ message: "Failed to update product", error: err.message });
   }
 };
@@ -90,14 +100,15 @@ const deleteProduct = async (req, res) => {
 
     res.json({ message: "Product deleted successfully" });
   } catch (err) {
+    console.error("❌ Failed to delete product:", err);
     res.status(500).json({ message: "Failed to delete product", error: err.message });
   }
 };
 
-module.exports = { 
-  getProducts, 
-  getProductById, 
-  addProduct, 
-  updateProduct, 
-  deleteProduct 
+module.exports = {
+  getProducts,
+  getProductById,
+  addProduct,
+  updateProduct,
+  deleteProduct
 };

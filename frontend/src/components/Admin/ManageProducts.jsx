@@ -8,6 +8,7 @@ const ManageProducts = () => {
   const [newProduct, setNewProduct] = useState({
     name: "",
     image: null,
+    images: [],
     price: "",
     description: "",
     features: "",
@@ -17,7 +18,6 @@ const ManageProducts = () => {
 
   const apiUrl = import.meta.env.VITE_API_URL;
 
-  // Axios instance with admin token auth, paralleling ManageOrders
   const axiosAdmin = axios.create({
     baseURL: `${apiUrl}/api/products`,
     headers: {
@@ -25,7 +25,6 @@ const ManageProducts = () => {
     },
   });
 
-  // Fetch all products
   const fetchProducts = async () => {
     setIsLoading(true);
     try {
@@ -33,7 +32,6 @@ const ManageProducts = () => {
       setProducts(res.data);
     } catch (err) {
       setError("Failed to load products");
-      console.error("Failed to load products", err);
     } finally {
       setIsLoading(false);
     }
@@ -44,7 +42,6 @@ const ManageProducts = () => {
     fetchProducts();
   }, []);
 
-  // Add or update product
   const handleAddProduct = async (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -55,60 +52,69 @@ const ManageProducts = () => {
       formData.append("name", newProduct.name);
       formData.append("price", newProduct.price);
       formData.append("description", newProduct.description);
+
       newProduct.features
         .split(",")
         .map((f) => f.trim())
         .filter(Boolean)
         .forEach((f) => formData.append("features", f));
-      if (newProduct.image) formData.append("image", newProduct.image);
+
+      if (newProduct.image) {
+        formData.append("image", newProduct.image); // main image
+      }
+
+      if (newProduct.images.length > 0) {
+        Array.from(newProduct.images).forEach((img) => {
+          formData.append("images", img); // match multer.fields name
+        });
+      }
 
       if (editingId) {
-        // Update existing product via JSON
-        const updatePayload = {
+        // Only update data, no image update in this block (handled separately if needed)
+        await axiosAdmin.put(`/${editingId}`, {
           name: newProduct.name,
           price: newProduct.price,
           description: newProduct.description,
-          features: newProduct.features.split(",").map(f => f.trim()).filter(Boolean),
-        };
-        await axiosAdmin.put(
-          `/${editingId}`,
-          updatePayload,
-          { headers: { authorization: import.meta.env.VITE_ADMIN_TOKEN, 'Content-Type': 'application/json' } }
-        );
+          features: newProduct.features
+            .split(",")
+            .map((f) => f.trim())
+            .filter(Boolean),
+        });
       } else {
-        // POST /api/products/
         await axiosAdmin.post(`/`, formData);
       }
 
-      setNewProduct({ name: "", image: null, price: "", description: "", features: "" });
+      setNewProduct({
+        name: "",
+        image: null,
+        images: [],
+        price: "",
+        description: "",
+        features: "",
+      });
       setEditingId(null);
       fetchProducts();
     } catch (err) {
       setError(err.response?.data?.message || "Failed to save product");
-      console.error("Save error:", err);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Delete product
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this product?")) return;
     setIsLoading(true);
     setError(null);
     try {
-      // DELETE /api/products/:id
       await axiosAdmin.delete(`/${id}`);
       fetchProducts();
     } catch (err) {
       setError(err.response?.data?.message || "Failed to delete product");
-      console.error("Delete error:", err);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Prepare edit
   const handleEdit = (product) => {
     setEditingId(product._id);
     setNewProduct({
@@ -117,6 +123,7 @@ const ManageProducts = () => {
       description: product.description,
       features: product.features?.join(", ") || "",
       image: null,
+      images: [],
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -152,7 +159,7 @@ const ManageProducts = () => {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              {editingId ? "New Image (optional)" : "Image"}
+              {editingId ? "New Image (optional)" : "Main Image"}
             </label>
             <input
               type="file"
@@ -173,13 +180,23 @@ const ManageProducts = () => {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Features</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Features (comma separated)</label>
             <input
               type="text"
               value={newProduct.features}
               onChange={(e) => setNewProduct({ ...newProduct, features: e.target.value })}
               className="w-full p-2 border rounded"
               required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Gallery Images</label>
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={(e) => setNewProduct({ ...newProduct, images: e.target.files })}
+              className="w-full p-2 border rounded"
             />
           </div>
         </div>
@@ -197,9 +214,7 @@ const ManageProducts = () => {
           <button
             type="submit"
             disabled={isLoading}
-            className={`px-4 py-2 rounded ${
-              isLoading ? "bg-gray-400" : "bg-blue-600 hover:bg-blue-700 text-white"
-            }`}
+            className={`px-4 py-2 rounded ${isLoading ? "bg-gray-400" : "bg-blue-600 hover:bg-blue-700 text-white"}`}
           >
             {isLoading
               ? "Processing..."
@@ -212,7 +227,7 @@ const ManageProducts = () => {
               type="button"
               onClick={() => {
                 setEditingId(null);
-                setNewProduct({ name: "", image: null, price: "", description: "", features: "" });
+                setNewProduct({ name: "", image: null, images: [], price: "", description: "", features: "" });
               }}
               className="ml-4 px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded"
             >

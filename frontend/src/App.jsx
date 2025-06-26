@@ -1,4 +1,3 @@
-// src/App.jsx
 import React, { lazy, Suspense, memo } from "react";
 import { Routes, Route } from "react-router-dom";
 
@@ -47,7 +46,6 @@ const NotFoundPage = memo(() => (
   </div>
 ));
 
-// Moved useUI inside UIProvider to ensure context is available
 const AppContent = memo(() => {
   const { showCartSidebar, setShowCartSidebar } = useUI();
 
@@ -57,8 +55,10 @@ const AppContent = memo(() => {
       
       {/* Cart Sidebar: shown when triggered */}
       {showCartSidebar && (
-        <Suspense fallback={<div className="fixed inset-0 bg-black bg-opacity-50 z-50" />}>
-          <CartSidebar onClose={() => setShowCartSidebar(false)} />
+        <Suspense fallback={<LoadingSpinner />}>
+          <div className="fixed   z-50">
+            <CartSidebar onClose={() => setShowCartSidebar(false)} />
+          </div>
         </Suspense>
       )}
 
