@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { CartContext } from "../context/CartContext";
-import products from "../data/products.json";
+import products from "../data/Products.json";
 
 const ProductDetailPage = () => {
   const { slug } = useParams();
