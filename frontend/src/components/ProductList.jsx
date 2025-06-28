@@ -1,6 +1,6 @@
 import React from "react";
 import ProductCard from "./ProductCard";
-import products from "../data/products.json"; // ✅ Import local JSON
+import products from "../data/Products.json"; // ✅ Import local JSON
 
 const ProductList = () => {
   return (
