@@ -6,17 +6,17 @@ const CartSidebar = ({ onClose }) => {
   const { cartItems, removeFromCart, clearCart, updateCartItemQuantity } = useContext(CartContext);
   const navigate = useNavigate();
 
-  const apiUrl = import.meta.env.VITE_API_URL;
+  // Calculate total from items
   const totalAmount = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
 
   const handleCheckout = () => {
-    window.scrollTo(0, 0); // Scroll to top before navigating
+    window.scrollTo(0, 0);
     if (cartItems.length === 0) {
       alert("Your cart is empty.");
       return;
     }
     navigate("/checkout", { state: { cartItems, totalAmount } });
-    onClose(); // Close the sidebar after navigating
+    onClose();
   };
 
   return (
@@ -32,17 +32,21 @@ const CartSidebar = ({ onClose }) => {
         ) : (
           <>
             {cartItems.map((item) => (
-              <div key={item._id} className="flex gap-3 items-center border p-2 rounded">
-                <img src={`${apiUrl}${item.image}`} alt={item.name} className="w-16 h-16 object-cover rounded" />
+              <div key={item.id /* or item._id */} className="flex gap-3 items-center border p-2 rounded">
+                <img
+                  src={item.image}     // now uses the local JSON image path directly
+                  alt={item.name}
+                  className="w-16 h-16 object-cover rounded"
+                />
                 <div className="flex-1">
                   <p className="font-semibold">{item.name}</p>
                   <p>₹ {item.price} × {item.quantity}</p>
                   <div className="flex gap-2 mt-1">
-                    <button onClick={() => updateCartItemQuantity(item._id, -1)} className="px-2 bg-gray-200">-</button>
-                    <button onClick={() => updateCartItemQuantity(item._id, 1)} className="px-2 bg-gray-200">+</button>
+                    <button onClick={() => updateCartItemQuantity(item.id, -1)} className="px-2 bg-gray-200">-</button>
+                    <button onClick={() => updateCartItemQuantity(item.id, 1)}  className="px-2 bg-gray-200">+</button>
                   </div>
                 </div>
-                <button onClick={() => removeFromCart(item._id)} className="text-sm text-red-500">Remove</button>
+                <button onClick={() => removeFromCart(item.id)} className="text-sm text-red-500">Remove</button>
               </div>
             ))}
             <div className="pt-4 border-t">

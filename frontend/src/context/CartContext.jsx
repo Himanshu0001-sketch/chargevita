@@ -5,7 +5,6 @@ import { AuthContext } from "./AuthContext"; // ensure AuthProvider wraps CartPr
 export const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
-  // Ensure AuthContext is defined
   const auth = useContext(AuthContext);
   const user = auth?.user || null;
 
@@ -28,24 +27,30 @@ export const CartProvider = ({ children }) => {
     }
   }, [cartItems, user]);
 
-  const addToCart = (product) => {
+  // Updated to accept qty
+  const addToCart = (product, qty = 1) => {
     setCartItems((prev) => {
       const exists = prev.find((i) => i._id === product._id);
       if (exists) {
         return prev.map((i) =>
-          i._id === product._id ? { ...i, quantity: i.quantity + 1 } : i
+          i._id === product._id
+            ? { ...i, quantity: i.quantity + qty }
+            : i
         );
       }
-      return [...prev, { ...product, quantity: 1 }];
+      return [...prev, { ...product, quantity: qty }];
     });
   };
 
-  const removeFromCart = (id) => setCartItems((prev) => prev.filter((i) => i._id !== id));
+  const removeFromCart = (id) =>
+    setCartItems((prev) => prev.filter((i) => i._id !== id));
 
   const updateCartItemQuantity = (id, delta) => {
     setCartItems((prev) =>
       prev.map((i) =>
-        i._id === id ? { ...i, quantity: Math.max(1, i.quantity + delta) } : i
+        i._id === id
+          ? { ...i, quantity: Math.max(1, i.quantity + delta) }
+          : i
       )
     );
   };
@@ -54,7 +59,13 @@ export const CartProvider = ({ children }) => {
 
   return (
     <CartContext.Provider
-      value={{ cartItems, addToCart, removeFromCart, updateCartItemQuantity, clearCart }}
+      value={{
+        cartItems,
+        addToCart,
+        removeFromCart,
+        updateCartItemQuantity,
+        clearCart,
+      }}
     >
       {children}
     </CartContext.Provider>

@@ -1,0 +1,62 @@
+[
+  {
+    "name": "Clear Skin Gummies",
+    "slug": "clear-skin-gummies",
+    "image": "/productsix.webp",
+    "price": 499,
+    "description": "Clear Skin gummies are formulated with a blend of vitamins and antioxidants to support healthy, glowing skin. Packed with ingredients like Vitamin C, Zinc, and Biotin, these gummies help reduce acne and promote a clear complexion. Ideal for those seeking a natural boost to their skincare routine from within.",
+    "features": [
+      "Supports healthy, glowing skin with Vitamin C, Zinc, and Biotin",
+      "Reduces acne and blemishes for a clearer complexion",
+      "Promotes collagen production for skin elasticity",
+      "Packed with antioxidants to fight free radical damage",
+      "Packed with antioxidants to fight free radical damage",
+      "GMP-certified, non-GMO, and gluten-free"
+    ],
+    "gallery": [
+      "/uploads/gallery/clearskin1.jpg",
+      "/uploads/gallery/clearskin2.jpg",
+      "/uploads/gallery/clearskin3.jpg",
+      "/uploads/gallery/clearskin4.jpg"
+     
+    ],
+    "bottomSection": {
+      "heading": "You Might Also Like",
+      "images": [
+        "/uploads/gallery/clearskin1.jpg",
+        "/uploads/gallery/clearskin2.jpg",
+        "/uploads/gallery/clearskin3.jpg"
+      ]
+    }
+  },
+  {
+    "name": "Biotin Tablets",
+    "slug": "biotin-tablets",
+    "image": "/productfour.jpg",
+    "price": 399,
+    "description": "Biotin tablets are designed to support healthy hair, skin, and nails with a high dose of Vitamin B7. Known for its beauty benefits, biotin helps promote strong, thick hair, enhances skin radiance, and strengthens nails. Ideal for those looking to improve their beauty regimen from the inside out.",
+    "features": [
+      "Promotes healthy hair growth and thickness with high-dose Biotin",
+      "Enhances skin radiance and supports nail strength",
+      "Supports overall beauty with Vitamin B7 (Biotin)",
+      "Helps maintain healthy metabolism and energy levels",
+      "Helps maintain healthy metabolism and energy levels",
+      "GMP-certified, non-GMO, and gluten-free"
+    ],
+    "gallery": [
+      "/uploads/gallery/clearskin1.jpg",
+      "/uploads/gallery/clearskin2.jpg",
+      "/uploads/gallery/clearskin3.jpg",
+      "/uploads/gallery/clearskin4.jpg"
+      
+    ],
+    "bottomSection": {
+      "heading": "Benefits of Biotin Gummies for Hair, Skin and Nails",
+      "images": [
+        "/1.png",
+        "/2.png",
+        "/3.png"
+      ]
+    }
+  }
+]

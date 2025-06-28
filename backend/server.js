@@ -1,58 +1,54 @@
-const express = require("express");
-const cors = require("cors");
+// backend/server.js
+const express   = require("express");
+const cors      = require("cors");
+const path      = require("path");
 const connectDB = require("./config/db");
 require("dotenv").config();
 
-const productRoutes = require("./routes/productRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const adminRoutes = require("./routes/adminRoutes");
-const userRoutes = require("./routes/userRoutes");
-const shiprocketRoutes = require("./routes/shiprocketRoutes");
+const userRoutes  = require("./routes/userRoutes");
 
 const app = express();
 
-// ✅ Relaxed and secure CORS setup
+// Relaxed and secure CORS setup
 const allowedOrigins = [
   "http://localhost:5173",
   "https://chargevita.in",
   "https://www.chargevita.in"
 ];
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.warn("❌ CORS blocked origin:", origin);
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+}));
 
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        console.warn("❌ CORS blocked origin:", origin);
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  })
-);
+// Body parser
+app.use(express.json());
 
-app.use(express.json()); // to handle JSON payloads
-
-// ✅ Connect to MongoDB
+// Connect to MongoDB
 connectDB();
 
-// ✅ Serve static files (images, etc.)
-app.use("/uploads", express.static("uploads"));
+// Serve static files (e.g. images)
+app.use("/public", express.static(path.join(__dirname, "public")));
 
-// ✅ Mount all API routes
-app.use("/api/admin", adminRoutes);
-app.use("/api/users", userRoutes);
-app.use("/api/products", productRoutes);
+// Mount your remaining API routes
 app.use("/api/orders", orderRoutes);
-app.use("/api/shiprocket", shiprocketRoutes);
+app.use("/api/admin",  adminRoutes);
+app.use("/api/users",  userRoutes);
 
-// ✅ Health check
+// Health check
 app.get("/", (req, res) => {
   res.send("E-commerce Backend Running with Shiprocket 🚀");
 });
 
-// ✅ Start server
+// Start server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));

@@ -8,25 +8,25 @@ import { UIProvider, useUI } from "./context/UIContext";
 import { AuthProvider } from "./context/AuthContext";
 
 // Lazy load components for code splitting
-const Home = lazy(() => import("./Home").then(module => ({ default: module.Home })));
-const ProductList = lazy(() => import("./components/ProductList"));
-const ProductDetail = lazy(() => import("./components/ProductDetailPage"));
-const CheckoutPage = lazy(() => import("./components/CheckoutPage"));
-const OrderConfirm = lazy(() => import("./components/OrderConfirmationPage"));
-const AboutPage = lazy(() => import("./pages/About"));
-const ContactPage = lazy(() => import("./pages/Contactpage"));
+const Home           = lazy(() => import("./Home").then(module => ({ default: module.Home })));
+const ProductList    = lazy(() => import("./components/ProductList"));
+const ProductDetail  = lazy(() => import("./components/ProductDetailPage"));
+const CheckoutPage   = lazy(() => import("./components/CheckoutPage"));
+const OrderConfirm   = lazy(() => import("./components/OrderConfirmationPage"));
+const AboutPage      = lazy(() => import("./pages/About"));
+const ContactPage    = lazy(() => import("./pages/Contactpage"));
 
-const Login = lazy(() => import("./components/Login"));
-const Register = lazy(() => import("./components/Register"));
-const MyOrders = lazy(() => import("./pages/MyOrders"));
+const Login          = lazy(() => import("./components/Login"));
+const Register       = lazy(() => import("./components/Register"));
+const MyOrders       = lazy(() => import("./pages/MyOrders"));
 
-const AdminLogin = lazy(() => import("./components/Admin/AdminLogin"));
+const AdminLogin     = lazy(() => import("./components/Admin/AdminLogin"));
 const AdminDashboard = lazy(() => import("./components/Admin/AdminDashboard"));
-const ManageProducts = lazy(() => import("./components/Admin/ManageProducts"));
-const ManageOrders = lazy(() => import("./components/Admin/ManageOrders"));
 
-const CartSidebar = lazy(() => import("./components/CartSidebar"));
-const RequireAuth = lazy(() => import("./components/RequireAuth"));
+const ManageOrders   = lazy(() => import("./components/Admin/ManageOrders"));
+
+const CartSidebar    = lazy(() => import("./components/CartSidebar"));
+const RequireAuth    = lazy(() => import("./components/RequireAuth"));
 const ProtectedRoute = lazy(() => import("./components/ProtectedRoutes"));
 
 // Loading component for Suspense fallback
@@ -56,7 +56,7 @@ const AppContent = memo(() => {
       {/* Cart Sidebar: shown when triggered */}
       {showCartSidebar && (
         <Suspense fallback={<LoadingSpinner />}>
-          <div className="fixed   z-50">
+          <div className="fixed z-50">
             <CartSidebar onClose={() => setShowCartSidebar(false)} />
           </div>
         </Suspense>
@@ -70,7 +70,10 @@ const AppContent = memo(() => {
             <Route path="/about" element={<AboutPage />} />
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/products" element={<ProductList />} />
-            <Route path="/product/:id" element={<ProductDetail />} />
+
+            {/* <-- Updated to use slug --> */}
+            <Route path="/product/:slug" element={<ProductDetail />} />
+
             <Route path="/order-confirmation" element={<OrderConfirm />} />
 
             {/* User Authentication */}
@@ -105,14 +108,7 @@ const AppContent = memo(() => {
                 </ProtectedRoute>
               }
             />
-            <Route
-              path="/admin/products"
-              element={
-                <ProtectedRoute needsDashboardSource>
-                  <ManageProducts />
-                </ProtectedRoute>
-              }
-            />
+           
             <Route
               path="/admin/orders"
               element={
@@ -132,7 +128,6 @@ const AppContent = memo(() => {
     </>
   );
 });
-
 AppContent.displayName = 'AppContent';
 
 function App() {

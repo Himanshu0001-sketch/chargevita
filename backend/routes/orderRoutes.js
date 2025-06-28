@@ -16,10 +16,10 @@ router.post('/', protect, createOrder);
 // User: fetch logged-in user's orders
 router.get('/my-orders', protect, getMyOrders);
 
-// Admin: fetch all orders
+// Admin: fetch all orders (no populate since Product model is removed)
 router.get('/admin', isAdmin, async (req, res) => {
   try {
-    const orders = await Order.find().populate('products.product');
+    const orders = await Order.find();  // removed .populate('products.product')
     res.json(orders);
   } catch (err) {
     console.error('Error fetching all orders:', err);

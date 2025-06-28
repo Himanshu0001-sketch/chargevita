@@ -12,7 +12,7 @@ import OrderConfirmationPage from './components/OrderConfirmationPage'
 export const Home = () => {
   return (
    <>
-   <div className='mt-5'>
+   <div>
     <img src={imageone} alt="" className='w-full h-auto'/>
    </div>
    
