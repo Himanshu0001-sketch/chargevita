@@ -2,7 +2,7 @@
   {
     "name": "Clear Skin Gummies",
     "slug": "clear-skin-gummies",
-    "image": "/productsix.webp",
+    "image": "/skin1.webp",
     "price": 499,
     "description": "Clear Skin gummies are formulated with a blend of vitamins and antioxidants to support healthy, glowing skin. Packed with ingredients like Vitamin C, Zinc, and Biotin, these gummies help reduce acne and promote a clear complexion. Ideal for those seeking a natural boost to their skincare routine from within.",
     "features": [
@@ -14,25 +14,26 @@
       "GMP-certified, non-GMO, and gluten-free"
     ],
     "gallery": [
-      "/uploads/gallery/clearskin1.jpg",
-      "/uploads/gallery/clearskin2.jpg",
-      "/uploads/gallery/clearskin3.jpg",
-      "/uploads/gallery/clearskin4.jpg"
+      "/skin2.webp",
+      "/skin3.webp",
+      "/skin4.webp",
+      "/skin5.webp"
      
     ],
     "bottomSection": {
-      "heading": "You Might Also Like",
+      "heading": "Benefits of Clear Skin Gummies for Skin.",
       "images": [
-        "/uploads/gallery/clearskin1.jpg",
-        "/uploads/gallery/clearskin2.jpg",
-        "/uploads/gallery/clearskin3.jpg"
+        "/skinsample1.webp",
+        "/skinsample2.webp",
+        "/skinsample3.webp"
       ]
-    }
+    },
+    "photo":["/sample2.jpg"]
   },
   {
     "name": "Biotin Tablets",
     "slug": "biotin-tablets",
-    "image": "/productfour.jpg",
+    "image": "/biotin1.webp",
     "price": 399,
     "description": "Biotin tablets are designed to support healthy hair, skin, and nails with a high dose of Vitamin B7. Known for its beauty benefits, biotin helps promote strong, thick hair, enhances skin radiance, and strengthens nails. Ideal for those looking to improve their beauty regimen from the inside out.",
     "features": [
@@ -44,11 +45,11 @@
       "GMP-certified, non-GMO, and gluten-free"
     ],
     "gallery": [
-      "/uploads/gallery/clearskin1.jpg",
-      "/uploads/gallery/clearskin2.jpg",
-      "/uploads/gallery/clearskin3.jpg",
-      "/uploads/gallery/clearskin4.jpg"
       
+      "/biotin2.webp",
+      "/biotin3.webp",
+      "/biotin4.webp",
+      "/biotin5.webp"
     ],
     "bottomSection": {
       "heading": "Benefits of Biotin Gummies for Hair, Skin and Nails",
@@ -57,6 +58,9 @@
         "/2.png",
         "/3.png"
       ]
+    },
+    "photo":["/sample.jpg"]
+      
     }
-  }
+  
 ]

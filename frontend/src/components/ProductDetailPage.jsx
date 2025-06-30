@@ -2,6 +2,7 @@ import React, { useEffect, useState, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { CartContext } from "../context/CartContext";
 import products from "../data/Products.json";
+import TestimonialSection from "./TestimonialSection";
 
 const ProductDetailPage = () => {
   const { slug } = useParams();
@@ -53,9 +54,10 @@ const ProductDetailPage = () => {
   };
 
   return (
-    <div className="container mx-auto py-5 px-5">
+    <>
+    <div className="container mx-auto py-5 px-5 ">
       {toast && (
-        <div className="fixed top-5 right-5 bg-green-100 text-green-800 p-3 rounded shadow">
+        <div className="fixed top-15 right-5 bg-green-100 text-green-800 p-3 rounded shadow">
           {toast.message}
         </div>
       )}
@@ -94,8 +96,8 @@ const ProductDetailPage = () => {
         {/* Details + Packs + Actions */}
         <div className="flex flex-col justify-center space-y-4">
           <h1 className="hidden md:block text-3xl font-bold">{product.name}</h1>
-          <p className="hidden md:block text-2xl text-red-500">₹ {product.price}</p>
-          <p className="md:hidden text-2xl text-red-500">₹ {product.price}</p>
+          <p className="hidden md:block text-2xl font-semibold text-red-500">₹ {product.price}</p>
+          <p className="md:hidden text-2xl font-semibold text-red-500">₹ {product.price}</p>
 
           <h3 className="text-xl font-semibold">Product Description:</h3>
           <p className="text-gray-700">{product.description}</p>
@@ -129,7 +131,7 @@ const ProductDetailPage = () => {
           </div>
 
           {/* Action Buttons */}
-          <div className="mt-4 flex gap-4">
+          <div className="hidden md:block mt-4 flex space-x-4">
             <button
               onClick={handleAddToCart}
               className="bg-yellow-500 text-white py-2 px-6 rounded hover:bg-yellow-600"
@@ -163,16 +165,16 @@ const ProductDetailPage = () => {
             ))}
            
           </div>
-          <div className="container max-w-5xl mx-auto mt-4 bg-orange-500 rounded-md p-5 text-white">
+          <div className="container max-w-5xl mx-auto mt-5 bg-orange-500 rounded-md p-5 text-white">
           <div className=" grid grid-cols-1 md:grid-cols-2 gap-4">
   {/* first 3 features */}
-  <ul className="list-disc list-inside text-sm space-y-2">
+  <ul className="list-disc list-inside text-sm space-y-3">
     {product.features.slice(0, 3).map((feature, idx) => (
       <li key={idx}>{feature}</li>
     ))}
   </ul>
   {/* next 3 features */}
-  <ul className="list-disc list-inside text-sm space-y-2">
+  <ul className="list-disc list-inside text-sm space-y-3">
     {product.features.slice(3, 6).map((feature, idx) => (
       <li key={idx + 3}>{feature}</li>
     ))}
@@ -181,7 +183,30 @@ const ProductDetailPage = () => {
           </div>
         </div>
       )}
+      <TestimonialSection/>
+      <div className="">
+        <h1 className="text-3xl font-bold text-center py-5 text-gray-600">What to Expect ?</h1>
+       <img src={product.photo} alt="" className="w-full"/>
+      </div>
     </div>
+    
+  <div className="md:hidden fixed bottom-0 left-0 w-full bg-white p-2 flex space-x-2 shadow-lg">
+  <button
+    onClick={handleAddToCart}
+    className="flex-1 bg-yellow-500 text-white py-3 rounded hover:bg-yellow-600"
+  >
+    Add to Cart
+  </button>
+  <button
+    onClick={handleBuyNow}
+    className="flex-1 bg-orange-500 text-white py-3 rounded hover:bg-orange-600"
+  >
+    Buy Now
+  </button>
+</div>
+
+
+    </>
   );
 };
 

@@ -15,14 +15,15 @@ const ManageOrders = () => {
   });
 
   useEffect(() => {
+    // clear any leftover flag
     sessionStorage.removeItem("fromDashboard");
     fetchOrders();
   }, []);
 
   const fetchOrders = async () => {
     try {
-      // GET /api/orders/admin
       const res = await axiosAdmin.get("/admin");
+      console.log("Fetched orders:", res.data);
       setOrders(res.data);
     } catch (error) {
       console.error("Error fetching orders", error);
@@ -32,7 +33,6 @@ const ManageOrders = () => {
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this order?")) return;
     try {
-      // DELETE /api/orders/:id
       await axiosAdmin.delete(`/${id}`);
       fetchOrders();
     } catch (err) {
@@ -42,7 +42,9 @@ const ManageOrders = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-9">
-      <h2 className="text-4xl font-bold mb-8 text-center text-orange-500 uppercase">Manage Orders</h2>
+      <h2 className="text-4xl font-bold mb-8 text-center text-orange-500 uppercase">
+        Manage Orders
+      </h2>
 
       {orders.length === 0 ? (
         <p className="text-center text-gray-600">No orders found.</p>
@@ -71,45 +73,25 @@ const ManageOrders = () => {
                     <span className="font-medium">Total:</span> ₹{order.totalAmount}
                   </p>
 
-                  <p className="text-gray-700">
-                    <span className="font-medium">Status:</span> {order.paymentStatus}
-                  </p>
-
-                  {/* Full Address */}
+                  {/* Shipping Address */}
                   <div className="mt-4">
                     <p className="text-gray-800 font-semibold mb-1">Shipping Address:</p>
                     <p className="text-gray-600 leading-relaxed">
-                      <strong>Name:</strong> {order.address.name}<br />
-                      <strong>Phone:</strong> {order.address.phone}<br />
-                      {order.address.email && (
-                        <><strong>Email:</strong> {order.address.email}<br /></>
-                      )}
-                      <strong>Street:</strong> {order.address.street}<br />
-                      <strong>City:</strong> {order.address.city}<br />
-                      <strong>State:</strong> {order.address.state}<br />
-                      <strong>Postal Code:</strong> {order.address.postalCode}
+                      {order.address.name}<br />
+                      {order.address.street}, {order.address.city}, {order.address.state} - {order.address.postalCode}<br />
+                      Phone: {order.address.phone}<br />
+                      {order.address.email && <>Email: {order.address.email}</>}
                     </p>
                   </div>
 
-                  {/* Product List with Image */}
+                  {/* Products List */}
                   <div className="mt-4">
                     <p className="text-gray-800 font-semibold mb-1">Products:</p>
-                    <ul className="space-y-4">
+                    <ul className="space-y-2">
                       {order.products.map((item, idx) => (
-                        <li key={idx} className="flex items-center gap-4">
-                          <img
-                            src={`${apiUrl}${item.product?.image || "/placeholder.jpg"}`}
-                            alt={item.product?.name || "Product"}
-                            className="w-16 h-16 object-cover rounded shadow"
-                          />
-                          <div>
-                            <p className="text-gray-700 font-medium">
-                              {item.product?.name || "Unknown Product"}
-                            </p>
-                            <p className="text-sm text-gray-500">
-                              Qty: {item.quantity} | ₹{item.product?.price}
-                            </p>
-                          </div>
+                        <li key={idx} className="flex justify-between">
+                          <span className="text-gray-700">{item.name} (x{item.quantity})</span>
+                          <span className="text-gray-700">₹{item.price}</span>
                         </li>
                       ))}
                     </ul>

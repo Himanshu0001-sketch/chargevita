@@ -1,76 +1,90 @@
+// controllers/orderController.js
 const Order = require("../models/Order");
-
 const nodemailer = require("nodemailer");
 
 exports.createOrder = async (req, res) => {
   try {
-    console.log("Received order data:", req.body);
+    const userId = req.user._id;
     const { products, totalAmount, address } = req.body;
 
-    if (!products || !Array.isArray(products) || !totalAmount || !address || !address.name) {
-      return res.status(400).json({ message: "Missing or invalid order data" });
+    // validate payload
+    if (
+      !Array.isArray(products) ||
+      products.length === 0 ||
+      typeof totalAmount !== "number" ||
+      !address?.name ||
+      !address?.phone ||
+      !address?.street ||
+      !address?.city ||
+      !address?.state ||
+      !address?.postalCode
+    ) {
+      return res.status(400).json({ message: "Invalid order payload" });
     }
 
-    // associate to logged-in user
-    const userId = req.user._id;
-
-    const order = new Order({ user: userId, products, totalAmount, address });
-    await order.save();
-    await order.populate("products.product");
-
-    if (!process.env.ADMIN_EMAIL || !process.env.ADMIN_EMAIL_PASS) {
-      throw new Error("Missing ADMIN_EMAIL or ADMIN_EMAIL_PASS");
+    // ensure each product has productId, name, price, quantity
+    for (const p of products) {
+      if (
+        !p.productId ||
+        typeof p.name   !== "string" ||
+        typeof p.price  !== "number" ||
+        typeof p.quantity !== "number"
+      ) {
+        return res
+          .status(400)
+          .json({ message: "Each product must include productId, name, price, quantity" });
+      }
     }
 
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.ADMIN_EMAIL,
-        pass: process.env.ADMIN_EMAIL_PASS,
-      },
+    // create & save
+    const order = new Order({
+      user: userId,
+      products,      // array of { productId, name, price, quantity }
+      totalAmount,
+      address        // { name, phone, email?, street, city, state, postalCode }
     });
+    await order.save();
 
-    const productDetails = order.products.map((p) =>
-      `<li>${p.quantity} × ${p.product?.name || "Unknown"}</li>`
-    ).join("");
-
-    const mailOptions = {
-      from: '"Shop Notification" <no-reply@yourstore.com>',
-      to: process.env.ADMIN_EMAIL,
-      subject: `🛒 New Order from ${address.name}`,
-      html: `
-        <h2>New Order Received</h2>
-        <p><strong>User ID:</strong> ${userId}</p>
-        <p><strong>Name:</strong> ${address.name}</p>
-        <p><strong>Phone:</strong> ${address.phone}</p>
-        ${address.email ? `<p><strong>Email:</strong> ${address.email}</p>` : ""}
-        <p><strong>Address:</strong> ${address.street}, ${address.city}, ${address.state} - ${address.postalCode}</p>
-        <p><strong>Total Amount:</strong> ₹${totalAmount}</p>
-        <p><strong>Products:</strong></p>
-        <ul>${productDetails}</ul>
-      `
-    };
-
-    try {
-      await transporter.sendMail(mailOptions);
-    } catch (emailErr) {
-      console.error("❌ Failed to send email:", emailErr);
+    // send notification email to admin
+    if (process.env.ADMIN_EMAIL && process.env.ADMIN_EMAIL_PASS) {
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: process.env.ADMIN_EMAIL,
+          pass: process.env.ADMIN_EMAIL_PASS,
+        },
+      });
+      const productDetails = products
+        .map(p => `<li>${p.quantity} × ${p.name} @ ₹${p.price}</li>`)
+        .join("");
+      await transporter.sendMail({
+        from: `"Shop Notification" <no-reply@yourstore.com>`,
+        to: process.env.ADMIN_EMAIL,
+        subject: `🛒 New Order from ${address.name}`,
+        html: `
+          <h2>New Order Received</h2>
+          <p><strong>User:</strong> ${address.name}</p>
+          <p><strong>Total Amount:</strong> ₹${totalAmount}</p>
+          <p><strong>Products:</strong></p>
+          <ul>${productDetails}</ul>
+        `,
+      }).catch(console.error);
     }
 
-    res.status(201).json(order);
+    return res.status(201).json(order);
   } catch (err) {
-    console.error("❌ Error placing order:", err);
-    res.status(500).json({ message: "Failed to place order", error: err.message });
+    console.error("Error placing order:", err);
+    return res.status(500).json({ message: "Server error", error: err.message });
   }
 };
 
 exports.getMyOrders = async (req, res) => {
   try {
     const userId = req.user._id;
-    const orders = await Order.find({ user: userId }).populate("products.product");
+    const orders = await Order.find({ user: userId }).sort({ createdAt: -1 });
     res.json(orders);
   } catch (err) {
-    console.error("❌ Error fetching user orders:", err);
+    console.error("Error fetching user orders:", err);
     res.status(500).json({ message: "Failed to fetch orders" });
   }
 };
@@ -78,9 +92,11 @@ exports.getMyOrders = async (req, res) => {
 exports.updateOrderStatus = async (req, res) => {
   try {
     const { id, status } = req.body;
+    // assumes your Order schema has a paymentStatus field
     await Order.findByIdAndUpdate(id, { paymentStatus: status });
     res.json({ message: "Order status updated" });
   } catch (err) {
+    console.error("Error updating order status:", err);
     res.status(500).json({ message: "Failed to update status" });
   }
 };
@@ -90,6 +106,7 @@ exports.deleteOrder = async (req, res) => {
     await Order.findByIdAndDelete(req.params.id);
     res.json({ message: "Order deleted" });
   } catch (err) {
+    console.error("Error deleting order:", err);
     res.status(500).json({ message: "Failed to delete order" });
   }
 };

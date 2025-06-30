@@ -1,57 +1,63 @@
 import React from 'react';
-import { IoPersonCircle } from 'react-icons/io5'; // 👈 Import user icon
+import { IoPersonCircle } from 'react-icons/io5';
 
 const testimonials = [
   {
-    name: "Sneha Kapoor",
-    role: "Health Enthusiast, Bangalore",
+    name: "Ritika Sharma",
+    role: "Corporate Executive, Delhi",
     message:
-      "ChargeVita supplements have become part of my daily routine. I feel more energetic and focused since I started using their multivitamins.",
+      "ChargeVita's Hair Biotin Gummies have transformed my hair health! My strands feel stronger and shinier after just a month of use.",
   },
   {
-    name: "Raj Mehta",
-    role: "Fitness Trainer, Mumbai",
+    name: "Karan Verma",
+    role: "Marketing Manager, Mumbai",
     message:
-      "I always recommend ChargeVita’s gummies to my clients. They're tasty, effective, and easy to incorporate into a busy lifestyle.",
+      "The Skin Care Gummies from ChargeVita are a game-changer. My skin looks visibly clearer and more radiant—even my colleagues noticed!",
   },
   {
-    name: "Aisha Rahman",
-    role: "Working Professional, Delhi",
+    name: "Priya Nair",
+    role: "Freelancer, Chennai",
     message:
-      "Balancing work and health is tough, but ChargeVita’s probiotic tablets and sleep gummies have truly made a difference in my wellbeing.",
+      "I was skeptical at first, but after trying ChargeVita's Hair Biotin Gummies, I’ve seen significant reduction in hair fall and improved volume.",
+  },
+  {
+    name: "Amit Joshi",
+    role: "Software Engineer, Pune",
+    message:
+      "As someone who battles with dull skin, ChargeVita’s Skin Care Gummies gave me a natural glow and smoother complexion in just weeks.",
   },
 ];
 
-const TestimonialSection = () => {
-  return (
-    <section className="py-12 px-6">
-      <div className="max-w-7xl mx-auto text-center">
-        <h2 className="text-2xl md:text-4xl font-bold text-gray-600 mb-6">What Our Customers Say</h2>
-        <p className="text-gray-600 mb-12 max-w-2xl mx-auto">
-          Trusted by thousands of happy clients across India. Here's what a few of them have to say about their experience with ChargeVita.
-        </p>
-        <div className="grid md:grid-cols-3 gap-8">
-          {testimonials.map((t, index) => (
-            <div
-              key={index}
-              className="bg-white shadow-lg rounded-2xl p-6 border border-purple-100 hover:shadow-xl transition"
-            >
-              <div className="flex items-center mb-4">
-                <div className="text-gray-500 text-5xl mr-4">
-                  <IoPersonCircle /> {/* 👈 User icon here */}
-                </div>
-                <div className="text-left">
-                  <h4 className="text-md font-semibold text-gray-800">{t.name}</h4>
-                  <p className="text-sm text-gray-500">{t.role}</p>
-                </div>
+const TestimonialSection = () => (
+  <section className="py-12 px-6 bg-gray-50">
+    <div className="max-w-6xl mx-auto text-center">
+      <h2 className="text-3xl font-bold text-gray-700 mb-4">
+        What Our Customers Are Saying
+      </h2>
+      <p className="text-gray-600 mb-10">
+        Hear from real users who’ve experienced the benefits of our Hair Biotin Gummies and Skin Care Gummies.
+      </p>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        {testimonials.map((t, index) => (
+          <div
+            key={index}
+            className="bg-white shadow-md rounded-xl p-6 border border-gray-200 hover:shadow-lg transition"
+          >
+            <div className="flex items-center mb-4">
+              <div className="text-gray-400 text-4xl mr-3">
+                <IoPersonCircle />
               </div>
-              <p className="text-sm text-gray-700 leading-relaxed">"{t.message}"</p>
+              <div className="text-left">
+                <h4 className="text-lg font-semibold text-gray-800">{t.name}</h4>
+                <p className="text-sm text-gray-500">{t.role}</p>
+              </div>
             </div>
-          ))}
-        </div>
+            <p className="text-gray-700 leading-relaxed">“{t.message}”</p>
+          </div>
+        ))}
       </div>
-    </section>
-  );
-};
+    </div>
+  </section>
+);
 
 export default TestimonialSection;

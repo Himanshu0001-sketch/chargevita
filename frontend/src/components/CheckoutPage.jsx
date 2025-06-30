@@ -50,7 +50,7 @@ const CheckoutPage = () => {
   const updateQuantity = (productId, delta) => {
     setCartItems((prevItems) =>
       prevItems.map((item) =>
-        item._id === productId
+        item.slug === productId
           ? { ...item, quantity: Math.max(1, item.quantity + delta) }
           : item
       )
@@ -63,7 +63,6 @@ const CheckoutPage = () => {
 
     const requiredFields = ["name", "phone", "street", "city", "state", "postalCode"];
     const hasEmptyFields = requiredFields.some((key) => address[key].trim() === "");
-
     if (hasEmptyFields) {
       alert("Please fill in all required fields.");
       setLoading(false);
@@ -73,19 +72,20 @@ const CheckoutPage = () => {
     try {
       const payload = {
         products: cartItems.map((item) => ({
-          product: item._id,
-          quantity: item.quantity,
+          productId: item.slug,
+          name:      item.name,
+          price:     item.price,
+          quantity:  item.quantity,
         })),
         totalAmount,
         address,
-        paymentStatus: "Pending",
       };
 
       const { data } = await axios.post(`${apiUrl}/api/orders`, payload);
 
       const orderDetails = {
-        orderId: data.orderId || "COD" + Date.now(),
-        paymentStatus: false,
+        orderId:     data._id || `COD${Date.now()}`,
+        paymentStatus: data.paymentStatus || "Pending",
         cartItems,
         totalAmount,
         address,
@@ -150,28 +150,29 @@ const CheckoutPage = () => {
           <div className="w-full md:w-2/5 bg-white p-6 rounded-xl shadow-sm">
             <h2 className="text-xl font-semibold mb-4 text-gray-700">Order Summary</h2>
             <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
-              {cartItems.map((item, index) => (
+              {cartItems.map((item) => (
                 <div
-                  key={index}
+                  key={item.slug}
                   className="flex items-start justify-between gap-4 border-b pb-4"
                 >
                   <img
-                    src={`${apiUrl}${item.image}`}
+                    src={item.image}
                     alt={item.name}
                     className="w-20 h-20 object-cover rounded"
+                    loading="lazy"
                   />
                   <div className="flex-1">
                     <p className="font-medium text-gray-800">{item.name}</p>
                     <div className="flex items-center space-x-2 mt-1">
                       <button
-                        onClick={() => updateQuantity(item._id, -1)}
+                        onClick={() => updateQuantity(item.slug, -1)}
                         className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
                       >
                         -
                       </button>
                       <span className="text-sm font-medium">{item.quantity}</span>
                       <button
-                        onClick={() => updateQuantity(item._id, 1)}
+                        onClick={() => updateQuantity(item.slug, 1)}
                         className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
                       >
                         +
@@ -194,7 +195,6 @@ const CheckoutPage = () => {
                 Total: ₹{totalAmount}
               </p>
             </div>
-             
           </div>
         </div>
       </div>
