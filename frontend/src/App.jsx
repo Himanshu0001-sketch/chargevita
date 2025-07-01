@@ -5,7 +5,7 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import { CartProvider } from "./context/CartContext";
 import { UIProvider, useUI } from "./context/UIContext";
-import { AuthProvider } from "./context/AuthContext";
+
 
 // Lazy load components for code splitting
 const Home           = lazy(() => import("./Home").then(module => ({ default: module.Home })));
@@ -16,18 +16,13 @@ const OrderConfirm   = lazy(() => import("./components/OrderConfirmationPage"));
 const AboutPage      = lazy(() => import("./pages/About"));
 const ContactPage    = lazy(() => import("./pages/Contactpage"));
 
-const Login          = lazy(() => import("./components/Login"));
-const Register       = lazy(() => import("./components/Register"));
-const MyOrders       = lazy(() => import("./pages/MyOrders"));
 
-const AdminLogin     = lazy(() => import("./components/Admin/AdminLogin"));
-const AdminDashboard = lazy(() => import("./components/Admin/AdminDashboard"));
 
-const ManageOrders   = lazy(() => import("./components/Admin/ManageOrders"));
+
 
 const CartSidebar    = lazy(() => import("./components/CartSidebar"));
-const RequireAuth    = lazy(() => import("./components/RequireAuth"));
-const ProtectedRoute = lazy(() => import("./components/ProtectedRoutes"));
+
+
 
 // Loading component for Suspense fallback
 const LoadingSpinner = memo(() => (
@@ -76,48 +71,21 @@ const AppContent = memo(() => {
 
             <Route path="/order-confirmation" element={<OrderConfirm />} />
 
-            {/* User Authentication */}
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
+           
 
             {/* Protected User Routes */}
             <Route
               path="/checkout"
               element={
-                <RequireAuth>
+                
                   <CheckoutPage />
-                </RequireAuth>
+                
               }
             />
-            <Route
-              path="/my-orders"
-              element={
-                <RequireAuth>
-                  <MyOrders />
-                </RequireAuth>
-              }
-            />
+            
 
-            {/* Admin Routes */}
-            <Route path="/admin" element={<AdminLogin />} />
-            <Route
-              path="/admin/dashboard"
-              element={
-                <ProtectedRoute needsLoginSource>
-                  <AdminDashboard />
-                </ProtectedRoute>
-              }
-            />
            
-            <Route
-              path="/admin/orders"
-              element={
-                <ProtectedRoute needsDashboardSource>
-                  <ManageOrders />
-                </ProtectedRoute>
-              }
-            />
-
+           
             {/* Fallback */}
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
@@ -132,14 +100,14 @@ AppContent.displayName = 'AppContent';
 
 function App() {
   return (
-    <AuthProvider>
+   
       <CartProvider>
         <UIProvider>
           {/* AppContent must be inside UIProvider for useUI */}
           <AppContent />
         </UIProvider>
       </CartProvider>
-    </AuthProvider>
+    
   );
 }
 

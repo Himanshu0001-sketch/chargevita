@@ -1,30 +1,38 @@
+// src/components/TestimonialSection.jsx
 import React from 'react';
-import { IoPersonCircle } from 'react-icons/io5';
+import imageone from "../assets/image/pc1.jpeg";
+import imagetwo from "../assets/image/pc2.jpeg";  
+import imagethree from "../assets/image/pc3.jpeg";
+import imagefour from "../assets/image/pc4.jpeg";
 
 const testimonials = [
   {
-    name: "Ritika Sharma",
+    name: "Ritik Sharma",
     role: "Corporate Executive, Delhi",
     message:
       "ChargeVita's Hair Biotin Gummies have transformed my hair health! My strands feel stronger and shinier after just a month of use.",
+    image: imageone,
   },
   {
     name: "Karan Verma",
     role: "Marketing Manager, Mumbai",
     message:
       "The Skin Care Gummies from ChargeVita are a game-changer. My skin looks visibly clearer and more radiant—even my colleagues noticed!",
+    image: imagetwo,
   },
   {
     name: "Priya Nair",
     role: "Freelancer, Chennai",
     message:
       "I was skeptical at first, but after trying ChargeVita's Hair Biotin Gummies, I’ve seen significant reduction in hair fall and improved volume.",
+    image: imagefour,
   },
   {
     name: "Amit Joshi",
     role: "Software Engineer, Pune",
     message:
       "As someone who battles with dull skin, ChargeVita’s Skin Care Gummies gave me a natural glow and smoother complexion in just weeks.",
+    image: imagethree,
   },
 ];
 
@@ -44,9 +52,11 @@ const TestimonialSection = () => (
             className="bg-white shadow-md rounded-xl p-6 border border-gray-200 hover:shadow-lg transition"
           >
             <div className="flex items-center mb-4">
-              <div className="text-gray-400 text-4xl mr-3">
-                <IoPersonCircle />
-              </div>
+              <img
+                src={t.image}
+                alt={t.name}
+                className="w-12 h-12 rounded-full mr-3 object-cover"
+              />
               <div className="text-left">
                 <h4 className="text-lg font-semibold text-gray-800">{t.name}</h4>
                 <p className="text-sm text-gray-500">{t.role}</p>

@@ -1,20 +1,26 @@
+// src/components/ProductDetailPage.jsx
 import React, { useEffect, useState, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { FaGift } from "react-icons/fa";
 import { CartContext } from "../context/CartContext";
+import { useUI } from "../context/UIContext";
 import products from "../data/Products.json";
 import TestimonialSection from "./TestimonialSection";
-
+import imageone from "../assets/image/badges.webp";
 const ProductDetailPage = () => {
   const { slug } = useParams();
+  const navigate = useNavigate();
+  const { addToCart } = useContext(CartContext);
+  const { setShowCartSidebar } = useUI();
+
   const [product, setProduct] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
   const [toast, setToast] = useState(null);
-  const { addToCart } = useContext(CartContext);
-  const navigate = useNavigate();
 
-  // track which pack is selected (0,1,2)
-  const [selectedPackIndex, setSelectedPackIndex] = useState(0);
+  // countdown state (seconds)
+  const [timeLeft, setTimeLeft] = useState(59 * 60);
 
+  // load product by slug
   useEffect(() => {
     const found = products.find((p) => p.slug === slug);
     if (found) {
@@ -23,189 +29,176 @@ const ProductDetailPage = () => {
     }
   }, [slug]);
 
+  // start countdown
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTimeLeft((t) => Math.max(0, t - 1));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   if (!product) {
     return <p className="text-center mt-10">Product not found.</p>;
   }
 
-  // define the three standard packs
-  const packs = [
-    { days: 30, mult: 1, badge: "", save: "" },
-    { days: 60, mult: 2, badge: "Most Popular", save: "Save 16%" },
-    { days: 90, mult: 3, badge: "Best Results", save: "Save 22%" },
-  ];
+  // format mm:ss
+  const minutes = Math.floor(timeLeft / 60);
+  const seconds = String(timeLeft % 60).padStart(2, "0");
 
   const handleAddToCart = () => {
-    const pack = packs[selectedPackIndex];
-    // pass pack.mult as second arg so cartContext adds that many
-    addToCart(product, pack.mult);
-    setToast({ message: `Added ${pack.days}-Day Pack to Cart!` });
+    // add 3 items (1 paid + 2 free)
+    addToCart(product, 3);
+    // open sidebar on both desktop & mobile
+    setShowCartSidebar(true);
+    setToast({ message: "✅ Added (1 + 2 Free) to Cart!" });
     setTimeout(() => setToast(null), 3000);
   };
 
   const handleBuyNow = () => {
-    const pack = packs[selectedPackIndex];
-    addToCart(product, pack.mult);
+    addToCart(product, 3);
+    setShowCartSidebar(true);
     navigate("/checkout", {
       state: {
-        cartItems: [{ ...product, quantity: pack.mult }],
-        totalAmount: product.price * pack.mult,
+        cartItems:   [{ ...product, quantity: 3 }],
+        totalAmount: product.price, // only charge one
       },
     });
   };
 
   return (
     <>
-    <div className="container mx-auto py-5 px-5 ">
-      {toast && (
-        <div className="fixed top-15 right-5 bg-green-100 text-green-800 p-3 rounded shadow">
-          {toast.message}
-        </div>
-      )}
-
-      {/* Main Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Mobile Title */}
-        <h1 className="md:hidden text-xl font-bold">{product.name}</h1>
-
-        {/* Image Gallery */}
-        <div className="flex flex-col items-center">
-          <img
-            src={selectedImage}
-            alt={product.name}
-            className="w-full h-96 object-contain rounded-lg shadow-lg"
-          />
-          <div className="flex mt-4 gap-2 overflow-x-auto">
-            <img
-              src={product.image}
-              alt="main-thumb"
-              className="w-20 h-20 object-cover rounded border-2 cursor-pointer"
-              onClick={() => setSelectedImage(product.image)}
-            />
-            {product.gallery.map((img, i) => (
-              <img
-                key={i}
-                src={img}
-                alt={`thumb-${i}`}
-                className="w-20 h-20 object-cover rounded border-2 cursor-pointer"
-                onClick={() => setSelectedImage(img)}
-              />
-            ))}
+      <div className="container mx-auto py-6 px-5">
+        {toast && (
+          <div className="fixed top-5 right-5 bg-green-100 text-green-800 p-3 rounded shadow-lg">
+            {toast.message}
           </div>
-        </div>
+        )}
 
-        {/* Details + Packs + Actions */}
-        <div className="flex flex-col justify-center space-y-4">
-          <h1 className="hidden md:block text-3xl font-bold">{product.name}</h1>
-          <p className="hidden md:block text-2xl font-semibold text-red-500">₹ {product.price}</p>
-          <p className="md:hidden text-2xl font-semibold text-red-500">₹ {product.price}</p>
-
-          <h3 className="text-xl font-semibold">Product Description:</h3>
-          <p className="text-gray-700">{product.description}</p>
-
-          {/* — Pack Selector */}
-          <div className="mt-6">
-            <h2 className="text-2xl font-semibold mb-4">Pick Your Pack:</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {packs.map((pack, i) => (
-                <div
+        {/* MAIN GRID */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* PRODUCT IMAGES */}
+          <div className="space-y-4">
+            <img
+              src={selectedImage}
+              alt={product.name}
+              className="w-full h-96 object-contain rounded-lg shadow-lg"
+            />
+            <div className="flex space-x-2 overflow-x-auto">
+              {[product.image, ...product.gallery].map((img, i) => (
+                <img
                   key={i}
-                  onClick={() => setSelectedPackIndex(i)}
-                  className={`
-                    relative p-4 rounded-lg border cursor-pointer
-                    ${i === 0 ? "bg-pink-50 border-pink-500" : "bg-gray-100 border-gray-300"}
-                    ${i === selectedPackIndex ? "ring-3 ring-orange-400" : ""}
-                  `}
-                >
-                  {pack.badge && (
-                    <span className="absolute top-0 right-0 bg-orange-500 text-white text-xs px-2 py-1  rounded-full">
-                      {pack.badge}
-                    </span>
-                  )}
-                  <h3 className="text-lg font-bold mt-2">{pack.days} Days Pack</h3>
-                  <p className="text-gray-600">{pack.days} gummies</p>
-                  <p className="mt-2 font-semibold">Rs. {product.price * pack.mult}</p>
-                  {pack.save && <p className="text-xs text-purple-700 mt-1">{pack.save}</p>}
-                </div>
+                  src={img}
+                  alt={`${product.name}-${i}`}
+                  className="w-20 h-20 object-cover rounded cursor-pointer border-2"
+                  onClick={() => setSelectedImage(img)}
+                />
               ))}
+            </div>
+             <div className="hidden md:flex mt-6 space-x-4">
+              <button
+                onClick={handleAddToCart}
+                className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white py-3 rounded-lg transition"
+              >
+                Add to Cart
+              </button>
+              <button
+                onClick={handleBuyNow}
+                className="flex-1 bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-lg transition"
+              >
+                Buy Now
+              </button>
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="hidden md:block mt-4 flex space-x-4">
-            <button
-              onClick={handleAddToCart}
-              className="bg-yellow-500 text-white py-2 px-6 rounded hover:bg-yellow-600"
-            >
-              Add to Cart
-            </button>
-            <button
-              onClick={handleBuyNow}
-              className="bg-orange-500 text-white py-2 px-6 rounded hover:bg-orange-600"
-            >
-              Buy Now
-            </button>
+          {/* PRODUCT DETAILS */}
+          <div className="flex flex-col justify-between">
+            <div className="space-y-4">
+              <h1 className="text-3xl font-bold">{product.name}</h1>
+              <p className="text-2xl font-semibold text-red-500">₹ {product.price}</p>
+
+              {/* SPECIAL OFFER BANNER */}
+              <div className="flex items-center bg-yellow-50 border-l-8 border-yellow-400 p-4 rounded-lg shadow-md">
+                <FaGift className="text-yellow-500 text-6xl mr-6 animate-bounce" />
+                <div>
+                  <p className="text-lg font-bold text-yellow-800">Special Offer</p>
+                  <p className="text-xl font-semibold text-yellow-900">Buy 1, Get 2 Free!</p>
+                  <p className="mt-1 text-sm text-red-600">
+                    Offer ends in{" "}
+                    <span className="font-mono font-bold text-red-700">
+                      00:{minutes}:{seconds}
+                    </span>
+                  </p>
+                </div>
+              </div>
+              <div>
+                <img src={imageone} alt="" className="md:w-1/2 w-full h-25 md:h-20"/>
+              </div>
+              {/* KEY HIGHLIGHTS */}
+              <div>
+                <h3 className="text-xl font-semibold mb-3">Key Highlights</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
+                  {product.keyHighlights.map((kh, idx) => (
+                    <div key={idx} className="border-b border-gray-200 pb-4 ">
+                      <p className="text-sm text-gray-500">{kh.label}</p>
+                      <p className="mt-1 font-medium text-gray-900">{kh.value}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            
+            
           </div>
         </div>
-      </div>
 
-      {/* Bottom Section (unchanged) */}
-      {product.bottomSection && (
+        {/* BOTTOM SECTION */}
+        {product.bottomSection && (
+          <div className="mt-12 space-y-6">
+            <h2 className="text-2xl font-semibold text-center">
+              {product.bottomSection.heading}
+            </h2>
+            <div className="flex flex-col md:flex-row gap-4">
+              {product.bottomSection.images.map((img, idx) => (
+                <img
+                  key={idx}
+                  src={img}
+                  alt={`${product.bottomSection.heading}-${idx}`}
+                  className="w-full md:w-1/3 h-70 object-contain rounded-lg"
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        <TestimonialSection />
+
+        {/* WHAT TO EXPECT */}
         <div className="mt-12">
-          <h2 className="text-2xl text-center font-semibold mb-4">
-            {product.bottomSection.heading}
-          </h2>
-          <div className="container flex flex-col md:flex-row max-w-5xl mx-auto gap-4">
-            {product.bottomSection.images.map((img, idx) => (
-              <img
-                key={idx}
-                src={img}
-                alt={`${product.bottomSection.heading} ${idx + 1}`}
-                className="w-full h-80 md:object-cover rounded-lg shadow"
-              />
-            ))}
-           
-          </div>
-          <div className="container max-w-5xl mx-auto mt-5 bg-orange-500 rounded-md p-5 text-white">
-          <div className=" grid grid-cols-1 md:grid-cols-2 gap-4">
-  {/* first 3 features */}
-  <ul className="list-disc list-inside text-sm space-y-3">
-    {product.features.slice(0, 3).map((feature, idx) => (
-      <li key={idx}>{feature}</li>
-    ))}
-  </ul>
-  {/* next 3 features */}
-  <ul className="list-disc list-inside text-sm space-y-3">
-    {product.features.slice(3, 6).map((feature, idx) => (
-      <li key={idx + 3}>{feature}</li>
-    ))}
-  </ul>
-</div>
-          </div>
+          <h2 className="text-3xl font-bold text-center mb-4">What to Expect?</h2>
+          <img
+            src={product.photo}
+            alt="What to Expect"
+            className="w-full rounded-lg shadow"
+          />
         </div>
-      )}
-      <TestimonialSection/>
-      <div className="">
-        <h1 className="text-3xl font-bold text-center py-5 text-gray-600">What to Expect ?</h1>
-       <img src={product.photo} alt="" className="w-full"/>
       </div>
-    </div>
-    
-  <div className="md:hidden fixed bottom-0 left-0 w-full bg-white p-2 flex space-x-2 shadow-lg">
-  <button
-    onClick={handleAddToCart}
-    className="flex-1 bg-yellow-500 text-white py-3 rounded hover:bg-yellow-600"
-  >
-    Add to Cart
-  </button>
-  <button
-    onClick={handleBuyNow}
-    className="flex-1 bg-orange-500 text-white py-3 rounded hover:bg-orange-600"
-  >
-    Buy Now
-  </button>
-</div>
 
-
+      {/* MOBILE CTA */}
+      <div className="md:hidden fixed bottom-0 left-0 w-full bg-white p-3 flex shadow-inner">
+        <button
+          onClick={handleAddToCart}
+          className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white py-3"
+        >
+          Add to Cart
+        </button>
+        <button
+          onClick={handleBuyNow}
+          className="flex-1 bg-orange-500 hover:bg-orange-600 text-white py-3"
+        >
+          Buy Now
+        </button>
+      </div>
     </>
   );
 };

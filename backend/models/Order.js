@@ -1,50 +1,25 @@
-// models/Order.js
+// backend/models/Order.js
 const mongoose = require("mongoose");
 
 const ProductItemSchema = new mongoose.Schema({
-  productId: {
-    type: String,
-    required: true
-  },
-  name: {
-    type: String,
-    required: true
-  },
-  price: {
-    type: Number,
-    required: true
-  },
-  quantity: {
-    type: Number,
-    required: true,
-    default: 1
-  }
+  productId: { type: String, required: true },
+  name:      { type: String, required: true },
+  price:     { type: Number, required: true },
+  quantity:  { type: Number, required: true, default: 1 }
 }, { _id: false });
 
 const OrderSchema = new mongoose.Schema({
-  user: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    required: true
-  },
   products: {
-    type: [ProductItemSchema],
+    type:     [ProductItemSchema],
     required: true,
-    validate: products => Array.isArray(products) && products.length > 0
+    validate: arr => Array.isArray(arr) && arr.length > 0
   },
-  totalAmount: {
-    type: Number,
-    required: true
-  },
-  paymentStatus: {
-    type: String,
-    required: true,
-    default: "Pending"
-  },
+  totalAmount:   { type: Number, required: true },
+  paymentStatus: { type: String, required: true, default: "Pending" },
   address: {
     name:       { type: String, required: true },
     phone:      { type: String, required: true },
-    email:      { type: String },  // optional email
+    email:      { type: String },  // optional
     street:     { type: String, required: true },
     city:       { type: String, required: true },
     state:      { type: String, required: true },

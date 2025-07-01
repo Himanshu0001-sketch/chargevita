@@ -1,3 +1,4 @@
+// src/components/CheckoutPage.jsx
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -5,105 +6,81 @@ import axios from "axios";
 const CheckoutPage = () => {
   const { state } = useLocation();
   const navigate = useNavigate();
-
   const apiUrl = import.meta.env.VITE_API_URL;
 
-  const { cartItems: initialCartItems, totalAmount: initialTotal } = state || {
-    cartItems: [],
-    totalAmount: 0,
-  };
-
-  const [cartItems, setCartItems] = useState(initialCartItems);
+  const { cartItems: initialCartItems = [], totalAmount: initialTotal = 0 } = state || {};
+  const [cartItems, setCartItems]     = useState(initialCartItems);
   const [totalAmount, setTotalAmount] = useState(initialTotal);
-  const [loading, setLoading] = useState(false);
-
-  const [address, setAddress] = useState({
-    name: "",
-    phone: "",
-    email: "",
-    street: "",
-    city: "",
-    state: "",
-    postalCode: "",
+  const [loading, setLoading]         = useState(false);
+  const [address, setAddress]         = useState({
+    name: "", phone: "", email: "", street: "", city: "", state: "", postalCode: ""
   });
 
+  // redirect if no items
   useEffect(() => {
-    if (!initialCartItems || initialCartItems.length === 0) {
-      navigate("/");
-    }
+    if (!initialCartItems.length) navigate("/");
   }, [initialCartItems, navigate]);
 
-  // Recalculate total when quantities change
+  // recompute total using same logic
   useEffect(() => {
-    const total = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
+    const total = cartItems.reduce((acc, it) => {
+      const paidUnits = Math.ceil(it.quantity / 3);
+      return acc + paidUnits * it.price;
+    }, 0);
     setTotalAmount(total);
   }, [cartItems]);
 
-  const handleAddressChange = (e) => {
+  const handleAddressChange = e => {
     const { name, value } = e.target;
-    setAddress((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setAddress(prev => ({ ...prev, [name]: value }));
   };
 
-  const updateQuantity = (productId, delta) => {
-    setCartItems((prevItems) =>
-      prevItems.map((item) =>
-        item.slug === productId
-          ? { ...item, quantity: Math.max(1, item.quantity + delta) }
-          : item
+  const updateQuantity = (slug, delta) =>
+    setCartItems(items =>
+      items.map(it =>
+        it.slug === slug
+          ? { ...it, quantity: Math.max(1, it.quantity + delta) }
+          : it
       )
     );
-  };
 
   const handlePlaceOrder = async () => {
     if (loading) return;
     setLoading(true);
 
-    const requiredFields = ["name", "phone", "street", "city", "state", "postalCode"];
-    const hasEmptyFields = requiredFields.some((key) => address[key].trim() === "");
-    if (hasEmptyFields) {
+    // require email now too
+    const required = ["name","phone","email","street","city","state","postalCode"];
+    if (required.some(f => !address[f].trim())) {
       alert("Please fill in all required fields.");
       setLoading(false);
       return;
     }
 
+    const payload = {
+      products: cartItems.map(it => ({
+        productId: it.slug,
+        name:      it.name,
+        price:     it.price,
+        quantity:  it.quantity
+      })),
+      totalAmount,
+      address
+    };
+
     try {
-      const payload = {
-        products: cartItems.map((item) => ({
-          productId: item.slug,
-          name:      item.name,
-          price:     item.price,
-          quantity:  item.quantity,
-        })),
-        totalAmount,
-        address,
-      };
-
       const { data } = await axios.post(`${apiUrl}/api/orders`, payload);
-
-      const orderDetails = {
-        orderId:     data._id || `COD${Date.now()}`,
-        paymentStatus: data.paymentStatus || "Pending",
-        cartItems,
-        totalAmount,
-        address,
-      };
-
-      navigate("/order-confirmation", { state: orderDetails });
+      navigate("/order-confirmation", {
+        state: { orderId: data._id, cartItems, totalAmount, address }
+      });
     } catch (err) {
-      console.error("Error placing order:", err);
+      console.error("Order error:", err.response?.data || err);
       alert("Failed to place order. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  const isFormValid = Object.entries(address).every(([key, val]) => {
-    if (key === "email") return true;
-    return val.trim() !== "";
-  });
+  const isFormValid = Object.values(address).every(v => Boolean(v.trim()));
 
   return (
     <div className="min-h-screen bg-gray-100 py-8 px-4 md:px-10">
@@ -113,33 +90,36 @@ const CheckoutPage = () => {
         <div className="flex flex-col-reverse md:flex-row gap-6">
           {/* Shipping Form */}
           <div className="w-full md:w-3/5 bg-white p-6 rounded-xl shadow-sm">
-            <h2 className="text-xl font-semibold mb-4 text-gray-700">Shipping Information</h2>
+            <h2 className="text-xl font-semibold mb-4">Shipping Information</h2>
             <div className="space-y-4">
               {[
-                { name: "name", label: "Full Name" },
-                { name: "phone", label: "Phone Number" },
-                { name: "email", label: "Email Address (optional)" },
-                { name: "street", label: "Street Address" },
-                { name: "city", label: "City" },
-                { name: "state", label: "State" },
-                { name: "postalCode", label: "Postal Code" },
-              ].map((field) => (
+                { name:"name", label:"Full Name" },
+                { name:"phone", label:"Phone Number" },
+                { name:"email", label:"Email Address" },
+                { name:"street", label:"Street Address" },
+                { name:"city", label:"City" },
+                { name:"state", label:"State" },
+                { name:"postalCode", label:"Postal Code" },
+              ].map(f => (
                 <input
-                  key={field.name}
-                  type="text"
-                  name={field.name}
-                  placeholder={field.label}
-                  value={address[field.name]}
+                  key={f.name}
+                  type={f.name==="email"?"email":"text"}
+                  name={f.name}
+                  placeholder={f.label}
+                  value={address[f.name]}
                   onChange={handleAddressChange}
                   className="w-full border border-gray-300 px-4 py-3 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
                 />
               ))}
             </div>
             <button
               onClick={handlePlaceOrder}
-              disabled={!isFormValid || loading}
-              className={`mt-6 w-full bg-blue-600 text-white font-medium text-lg py-3 rounded-md transition hover:bg-blue-700 ${
-                !isFormValid || loading ? "opacity-50 cursor-not-allowed" : ""
+              disabled={!isFormValid||loading}
+              className={`mt-6 w-full py-3 text-white font-medium rounded-md transition ${
+                !isFormValid||loading
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-blue-600 hover:bg-blue-700"
               }`}
             >
               {loading ? "Processing..." : "Place Order (Cash on Delivery)"}
@@ -148,52 +128,34 @@ const CheckoutPage = () => {
 
           {/* Order Summary */}
           <div className="w-full md:w-2/5 bg-white p-6 rounded-xl shadow-sm">
-            <h2 className="text-xl font-semibold mb-4 text-gray-700">Order Summary</h2>
+            <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
             <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
-              {cartItems.map((item) => (
-                <div
-                  key={item.slug}
-                  className="flex items-start justify-between gap-4 border-b pb-4"
-                >
-                  <img
-                    src={item.image}
-                    alt={item.name}
-                    className="w-20 h-20 object-cover rounded"
-                    loading="lazy"
-                  />
-                  <div className="flex-1">
-                    <p className="font-medium text-gray-800">{item.name}</p>
-                    <div className="flex items-center space-x-2 mt-1">
-                      <button
-                        onClick={() => updateQuantity(item.slug, -1)}
-                        className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
-                      >
-                        -
-                      </button>
-                      <span className="text-sm font-medium">{item.quantity}</span>
-                      <button
-                        onClick={() => updateQuantity(item.slug, 1)}
-                        className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
-                      >
-                        +
-                      </button>
+              {cartItems.map(it => {
+                const paidUnits = Math.ceil(it.quantity/3);
+                const subtotal  = paidUnits * it.price;
+                return (
+                  <div key={it.slug} className="flex items-start justify-between gap-4 border-b pb-4">
+                    <img src={it.image} alt={it.name} className="w-20 h-20 object-cover rounded" loading="lazy" />
+                    <div className="flex-1">
+                      <p className="font-medium">{it.name}</p>
+                      <p className="text-sm">
+                        Qty: {it.quantity} <span className="text-gray-500">(1 paid + 2 free)</span>
+                      </p>
+                      <p className="mt-1">₹{it.price} × {paidUnits} = <strong>₹{subtotal}</strong></p>
+                      <div className="flex gap-2 mt-1">
+                        <button onClick={()=>updateQuantity(it.slug,-1)} className="px-2 bg-gray-200 rounded">-</button>
+                        <button onClick={()=>updateQuantity(it.slug, 1)} className="px-2 bg-gray-200 rounded">+</button>
+                      </div>
                     </div>
-                    <p className="text-sm text-gray-500">Price: ₹{item.price}</p>
+                    <p className="font-semibold">₹{subtotal}</p>
                   </div>
-                  <p className="font-semibold text-gray-700">
-                    ₹{item.price * item.quantity}
-                  </p>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
-            <div className="pt-4 mt-4 space-y-2 text-right">
-              <p className="text-gray-700 text-sm">
-                Items: <span className="font-medium">{cartItems.length}</span>
-              </p>
-              <p className="text-gray-800 text-xl font-bold">
-                Total: ₹{totalAmount}
-              </p>
+            <div className="mt-4 text-right">
+              <p>Items: <span className="font-medium">{cartItems.length}</span></p>
+              <p className="text-xl font-bold">Total: ₹{totalAmount}</p>
             </div>
           </div>
         </div>

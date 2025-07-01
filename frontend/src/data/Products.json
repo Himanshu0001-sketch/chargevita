@@ -4,12 +4,36 @@
     "slug": "clear-skin-gummies",
     "image": "/skin1.webp",
     "price": 499,
-    "description": "Clear Skin gummies are formulated with a blend of vitamins and antioxidants to support healthy, glowing skin. Packed with ingredients like Vitamin C, Zinc, and Biotin, these gummies help reduce acne and promote a clear complexion. Ideal for those seeking a natural boost to their skincare routine from within.",
+    "keyHighlights": [
+      {
+        "label": "Nutrient Blend",
+        "value": "Vitamin C, Zinc & Biotin"
+      },
+      {
+        "label": "Antioxidant Support",
+        "value": "Fights free radical damage"
+      },
+      {
+        "label": "Acne Reduction",
+        "value": "Helps reduce blemishes"
+      },
+      {
+        "label": "Complexion Boost",
+        "value": "Evens out skin tone"
+      },
+      {
+        "label": "Collagen Production",
+        "value": "Promotes firmer, elastic skin"
+      },
+      {
+        "label": "Format",
+        "value": "Tasty, chewable gummies"
+      }
+    ],
     "features": [
       "Supports healthy, glowing skin with Vitamin C, Zinc, and Biotin",
       "Reduces acne and blemishes for a clearer complexion",
       "Promotes collagen production for skin elasticity",
-      "Packed with antioxidants to fight free radical damage",
       "Packed with antioxidants to fight free radical damage",
       "GMP-certified, non-GMO, and gluten-free"
     ],
@@ -18,34 +42,56 @@
       "/skin3.webp",
       "/skin4.webp",
       "/skin5.webp"
-     
     ],
     "bottomSection": {
-      "heading": "Benefits of Clear Skin Gummies for Skin.",
+      "heading": "Benefits of Clear Skin Gummies for Skin",
       "images": [
         "/skinsample1.webp",
         "/skinsample2.webp",
         "/skinsample3.webp"
       ]
     },
-    "photo":["/sample2.jpg"]
+    "photo": ["/sample2.jpg"]
   },
   {
     "name": "Biotin Tablets",
     "slug": "biotin-tablets",
     "image": "/biotin1.webp",
     "price": 399,
-    "description": "Biotin tablets are designed to support healthy hair, skin, and nails with a high dose of Vitamin B7. Known for its beauty benefits, biotin helps promote strong, thick hair, enhances skin radiance, and strengthens nails. Ideal for those looking to improve their beauty regimen from the inside out.",
+    "keyHighlights": [
+      {
+        "label": "High-Dose Biotin",
+        "value": "Vitamin B7 for hair & nails"
+      },
+      {
+        "label": "Skin Radiance",
+        "value": "Enhances natural glow"
+      },
+      {
+        "label": "Nail Strength",
+        "value": "Supports harder, healthier nails"
+      },
+      {
+        "label": "Energy Support",
+        "value": "Boosts metabolism"
+      },
+      {
+        "label": "Quality",
+        "value": "GMP-certified, non-GMO, gluten-free"
+      },
+      {
+        "label": "Format",
+        "value": "Convenient tablet form"
+      }
+    ],
     "features": [
       "Promotes healthy hair growth and thickness with high-dose Biotin",
       "Enhances skin radiance and supports nail strength",
       "Supports overall beauty with Vitamin B7 (Biotin)",
       "Helps maintain healthy metabolism and energy levels",
-      "Helps maintain healthy metabolism and energy levels",
       "GMP-certified, non-GMO, and gluten-free"
     ],
     "gallery": [
-      
       "/biotin2.webp",
       "/biotin3.webp",
       "/biotin4.webp",
@@ -59,8 +105,6 @@
         "/3.png"
       ]
     },
-    "photo":["/sample.jpg"]
-      
-    }
-  
+    "photo": ["/sample.jpg"]
+  }
 ]
