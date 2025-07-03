@@ -51,13 +51,18 @@
         "/skinsample3.webp"
       ]
     },
+    "offer": {
+    "title": "Special Offer",
+    "subtitle": "Skin Care Gummies @499+ free Ice roller",
+    "endsIn": "00:59:00"
+  },
     "photo": ["/sample2.jpg"]
   },
   {
-    "name": "Biotin Tablets",
-    "slug": "biotin-tablets",
+    "name": "Hair Health Gummies",
+    "slug": "hair-health-gummies",
     "image": "/biotin1.webp",
-    "price": 399,
+    "price": 499,
     "keyHighlights": [
       {
         "label": "High-Dose Biotin",
@@ -105,6 +110,11 @@
         "/3.png"
       ]
     },
+    "offer": {
+    "title": "Special Offer",
+    "subtitle": "Buy 2 Hair Health Gummies @949",
+    "endsIn": "00:59:00"
+  },
     "photo": ["/sample.jpg"]
   }
 ]

@@ -2,30 +2,46 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
+import products from "../data/Products.json";
 
 const CheckoutPage = () => {
   const { state } = useLocation();
   const navigate = useNavigate();
   const apiUrl = import.meta.env.VITE_API_URL;
 
-  const { cartItems: initialCartItems = [], totalAmount: initialTotal = 0 } = state || {};
-  const [cartItems, setCartItems]     = useState(initialCartItems);
+  const {
+    cartItems: initialCartItems = [],
+    totalAmount: initialTotal = 0
+  } = state || {};
+
+  const [cartItems, setCartItems] = useState(initialCartItems);
   const [totalAmount, setTotalAmount] = useState(initialTotal);
-  const [loading, setLoading]         = useState(false);
-  const [address, setAddress]         = useState({
+  const [loading, setLoading] = useState(false);
+  const [address, setAddress] = useState({
     name: "", phone: "", email: "", street: "", city: "", state: "", postalCode: ""
   });
 
-  // redirect if no items
+  // Redirect home if cart is empty
   useEffect(() => {
     if (!initialCartItems.length) navigate("/");
   }, [initialCartItems, navigate]);
 
-  // recompute total using same logic
+  // Recompute total using offers
   useEffect(() => {
     const total = cartItems.reduce((acc, it) => {
-      const paidUnits = Math.ceil(it.quantity / 3);
-      return acc + paidUnits * it.price;
+      if (it.slug === "ice-roller") return acc; // skip free roller
+      const buy = it.offer?.buy || 1;
+      const free = it.offer?.free || 0;
+      const groupSize = buy + free;
+      const paidGroups = Math.ceil(it.quantity / groupSize);
+      const paidUnits = paidGroups * buy;
+      let lineTotal = paidUnits * it.price;
+      // Hair Health Gummies discount
+      if (it.slug === "hair-health-gummies" && it.quantity >= 2) {
+        const discount = Math.floor(it.quantity / 2) * 49;
+        lineTotal -= discount;
+      }
+      return acc + lineTotal;
     }, 0);
     setTotalAmount(total);
   }, [cartItems]);
@@ -35,7 +51,7 @@ const CheckoutPage = () => {
     setAddress(prev => ({ ...prev, [name]: value }));
   };
 
-  const updateQuantity = (slug, delta) =>
+  const updateQuantity = (slug, delta) => {
     setCartItems(items =>
       items.map(it =>
         it.slug === slug
@@ -43,30 +59,27 @@ const CheckoutPage = () => {
           : it
       )
     );
+  };
 
   const handlePlaceOrder = async () => {
     if (loading) return;
     setLoading(true);
-
-    // require email now too
     const required = ["name","phone","email","street","city","state","postalCode"];
     if (required.some(f => !address[f].trim())) {
       alert("Please fill in all required fields.");
       setLoading(false);
       return;
     }
-
     const payload = {
       products: cartItems.map(it => ({
         productId: it.slug,
-        name:      it.name,
-        price:     it.price,
-        quantity:  it.quantity
+        name: it.name,
+        price: it.price,
+        quantity: it.quantity
       })),
       totalAmount,
       address
     };
-
     try {
       const { data } = await axios.post(`${apiUrl}/api/orders`, payload);
       navigate("/order-confirmation", {
@@ -115,9 +128,9 @@ const CheckoutPage = () => {
             </div>
             <button
               onClick={handlePlaceOrder}
-              disabled={!isFormValid||loading}
+              disabled={!isFormValid || loading}
               className={`mt-6 w-full py-3 text-white font-medium rounded-md transition ${
-                !isFormValid||loading
+                (!isFormValid || loading)
                   ? "bg-gray-400 cursor-not-allowed"
                   : "bg-blue-600 hover:bg-blue-700"
               }`}
@@ -131,23 +144,60 @@ const CheckoutPage = () => {
             <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
             <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
               {cartItems.map(it => {
-                const paidUnits = Math.ceil(it.quantity/3);
-                const subtotal  = paidUnits * it.price;
+                const isIce = it.slug === "ice-roller";
+                if (isIce) {
+                  return (
+                    <div key={it.slug} className="flex justify-between items-center border-b pb-4">
+                      <p className="font-medium">
+                        {it.name} <span className="text-green-600">(Free)</span>
+                      </p>
+                    </div>
+                  );
+                }
+                const buy = it.offer?.buy || 1;
+                const free = it.offer?.free || 0;
+                const groupSize = buy + free;
+                const paidGroups = Math.ceil(it.quantity / groupSize);
+                const paidUnits = paidGroups * buy;
+                let subtotal = paidUnits * it.price;
+                let discount = 0;
+                if (it.slug === "hair-health-gummies" && it.quantity >= 2) {
+                  discount = Math.floor(it.quantity / 2) * 49;
+                  subtotal -= discount;
+                }
                 return (
                   <div key={it.slug} className="flex items-start justify-between gap-4 border-b pb-4">
-                    <img src={it.image} alt={it.name} className="w-20 h-20 object-cover rounded" loading="lazy" />
+                    <img
+                      src={it.image}
+                      alt={it.name}
+                      className="w-20 h-20 object-cover rounded"
+                      loading="lazy"
+                    />
                     <div className="flex-1">
                       <p className="font-medium">{it.name}</p>
-                      <p className="text-sm">
-                        Qty: {it.quantity} <span className="text-gray-500">(1 paid + 2 free)</span>
+                      <p className="text-sm">Qty: {it.quantity}</p>
+                      <p className="mt-1">
+                        ₹{it.price} × {paidUnits} = <strong>₹{paidUnits * it.price}</strong>
                       </p>
-                      <p className="mt-1">₹{it.price} × {paidUnits} = <strong>₹{subtotal}</strong></p>
-                      <div className="flex gap-2 mt-1">
-                        <button onClick={()=>updateQuantity(it.slug,-1)} className="px-2 bg-gray-200 rounded">-</button>
-                        <button onClick={()=>updateQuantity(it.slug, 1)} className="px-2 bg-gray-200 rounded">+</button>
+                      {discount > 0 && (
+                        <p className="text-sm text-green-600">Discount: -₹{discount}</p>
+                      )}
+                      <p className="mt-1 font-semibold">₹{subtotal}</p>
+                      <div className="flex gap-2 mt-1">  
+                        <button
+                          onClick={() => updateQuantity(it.slug, -1)}
+                          className="px-2 bg-gray-200 rounded"
+                        >
+                          −
+                        </button>
+                        <button
+                          onClick={() => updateQuantity(it.slug, 1)}
+                          className="px-2 bg-gray-200 rounded"
+                        >
+                          +
+                        </button>
                       </div>
                     </div>
-                    <p className="font-semibold">₹{subtotal}</p>
                   </div>
                 );
               })}
