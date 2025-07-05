@@ -1,13 +1,28 @@
 // backend/controllers/orderController.js
+require('dotenv').config();
 const Order      = require("../models/Order");
 const nodemailer = require("nodemailer");
 
+// Configure transporter using Gmail with credentials from .env
+const transporter = (process.env.ADMIN_EMAIL && process.env.ADMIN_EMAIL_PASS)
+  ? nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
+      auth: {
+        user: process.env.ADMIN_EMAIL,
+        pass: process.env.ADMIN_EMAIL_PASS,
+      },
+    })
+  : null;
+
+// Create new order and send notifications
 exports.createOrder = async (req, res) => {
   try {
     const { products, totalAmount, address } = req.body;
     const customerEmail = address.email;
 
-    // Validate payload
+    // Validate request payload
     if (
       !Array.isArray(products) ||
       products.length === 0 ||
@@ -23,40 +38,29 @@ exports.createOrder = async (req, res) => {
       return res.status(400).json({ message: "Invalid order payload" });
     }
 
-    // Validate each product entry
+    // Validate product entries
     for (const p of products) {
-      if (
-        !p.productId ||
-        typeof p.name     !== "string" ||
-        typeof p.price    !== "number" ||
-        typeof p.quantity !== "number"
-      ) {
+      if (!p.productId || typeof p.name !== "string" || typeof p.price !== "number" || typeof p.quantity !== "number") {
         return res.status(400).json({
           message: "Each product must include productId, name, price, quantity"
         });
       }
     }
 
-    // Create & save the order
+    // Save order to database
     const order = new Order({ products, totalAmount, address });
     await order.save();
 
-    // Prepare product details list
-    const productDetails = products
+    // Prepare HTML lists
+    const productDetailsAdmin = products
       .map(p => `<li>${p.quantity} × ${p.name} @ ₹${p.price}</li>`)
       .join("");
+    const productDetailsCustomer = products
+      .map(p => `<li>${p.quantity} × ${p.name}</li>`)
+      .join("");
 
-    // Only proceed with emails if transporter creds exist
-    if (process.env.ADMIN_EMAIL && process.env.ADMIN_EMAIL_PASS) {
-      const transporter = nodemailer.createTransport({
-        service: "gmail",
-        auth: {
-          user: process.env.ADMIN_EMAIL,
-          pass: process.env.ADMIN_EMAIL_PASS
-        },
-      });
-
-      // 1) Email to ADMIN
+    if (transporter) {
+      // Notify admin
       const adminHtml = `
         <h2>🛒 New Order Received</h2>
         <p><strong>Order ID:</strong> ${order._id}</p>
@@ -70,30 +74,28 @@ exports.createOrder = async (req, res) => {
           Phone: ${address.phone}
         </p>
         <h3>Products:</h3>
-        <ul>${productDetails}</ul>
+        <ul>${productDetailsAdmin}</ul>
       `;
       transporter.sendMail({
         from:    `"Shop Notification" <${process.env.ADMIN_EMAIL}>`,
         to:      process.env.ADMIN_EMAIL,
         subject: `🛒 New Order #${order._id}`,
-        html:    adminHtml
+        html:    adminHtml,
       }).catch(console.error);
 
-      // 2) Confirmation email to CUSTOMER
+      // Confirm to customer
       const customerHtml = `
         <h2>Thank you for your order!</h2>
         <p>Your Order ID is <strong>${order._id}</strong></p>
         <h3>Order Details:</h3>
-        <ul>
-          ${products.map(p => `<li>${p.quantity} × ${p.name}</li>`).join("")}
-        </ul>
+        <ul>${productDetailsCustomer}</ul>
         <p>We will notify you once your order ships.</p>
       `;
       transporter.sendMail({
-        from:    `"ChargeVita.in" <${process.env.ADMIN_EMAIL}>`,
+        from:    `"${process.env.ADMIN_EMAIL}" <${process.env.ADMIN_EMAIL}>`,
         to:      customerEmail,
         subject: `Your Order Confirmation (#${order._id})`,
-        html:    customerHtml
+        html:    customerHtml,
       }).catch(console.error);
     }
 
@@ -104,6 +106,7 @@ exports.createOrder = async (req, res) => {
   }
 };
 
+// Fetch all orders
 exports.getAllOrders = async (req, res) => {
   try {
     const orders = await Order.find().sort({ createdAt: -1 });
